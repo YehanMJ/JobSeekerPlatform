@@ -1,0 +1,15 @@
+package lk.acpt.demo.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class EmployerDTO {
+    private Integer id;
+    private String name;
+    private String company;
+    private String email;
+}
