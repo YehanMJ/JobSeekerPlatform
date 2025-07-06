@@ -9,7 +9,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class EmployerDTO {
     private Integer id;
-    private String name;
+    private String username;
     private String company;
     private String email;
+    private String role;
+    private String password;
+    private String profilePictureUrl;
 }

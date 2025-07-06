@@ -9,7 +9,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class TrainerDTO {
     private Integer id;
-    private String name;
+    private String username;
     private String expertise;
     private String email;
+    private String role;
+    private String password;
+    private String profilePictureUrl;
 }

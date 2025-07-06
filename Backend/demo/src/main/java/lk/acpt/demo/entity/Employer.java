@@ -16,4 +16,5 @@ import lombok.NoArgsConstructor;
 @Entity
 public class Employer extends User {
     private String companyName;
+    private String profilePictureUrl;
 }

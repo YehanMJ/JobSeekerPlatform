@@ -23,4 +23,7 @@ public class JobOffer{
     @ManyToOne
     private Employer employer;
 
+    @ManyToOne
+    private Job job;
+
 }

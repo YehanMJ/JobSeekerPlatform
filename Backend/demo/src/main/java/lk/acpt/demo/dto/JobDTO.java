@@ -12,4 +12,6 @@ public class JobDTO {
     private String title;
     private String description;
     private Integer employerId;
+    private String location;
+    private String jobTime;
 }

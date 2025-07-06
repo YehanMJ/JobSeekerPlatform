@@ -9,4 +9,5 @@ public interface TrainerService {
     Trainer createTrainer(Trainer trainer);
     Trainer updateTrainer(Integer id, Trainer trainer);
     void deleteTrainer(Integer id);
+    Trainer uploadProfilePicture(Integer id, org.springframework.web.multipart.MultipartFile file);
 }

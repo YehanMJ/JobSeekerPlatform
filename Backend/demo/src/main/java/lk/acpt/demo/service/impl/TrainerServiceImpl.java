@@ -25,6 +25,9 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     public Trainer createTrainer(Trainer trainer) {
+        // Encode password with Base64
+        String encodedPassword = java.util.Base64.getEncoder().encodeToString(trainer.getPassword().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        trainer.setPassword(encodedPassword);
         return trainerRepository.save(trainer);
     }
 
@@ -39,5 +42,27 @@ public class TrainerServiceImpl implements TrainerService {
     @Override
     public void deleteTrainer(Integer id) {
         trainerRepository.deleteById(id);
+    }
+
+    @Override
+    public Trainer uploadProfilePicture(Integer id, org.springframework.web.multipart.MultipartFile file) {
+        Trainer trainer = getTrainerById(id);
+        if (file == null || file.isEmpty()) {
+            throw new RuntimeException("Invalid file. Please upload an image file.");
+        }
+        String uploadDir = System.getProperty("user.dir") + java.io.File.separator + "uploads" + java.io.File.separator + "profile";
+        java.io.File dir = new java.io.File(uploadDir);
+        if (!dir.exists()) dir.mkdirs();
+        String username = trainer.getUsername();
+        String fileName = "profile_" + username + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        java.io.File dest = new java.io.File(dir, fileName);
+        try {
+            file.transferTo(dest);
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Failed to save profile picture.", e);
+        }
+        String fullUrl = "http://localhost:8080/uploads/profile/" + fileName;
+        trainer.setProfilePictureUrl(fullUrl);
+        return trainerRepository.save(trainer);
     }
 }

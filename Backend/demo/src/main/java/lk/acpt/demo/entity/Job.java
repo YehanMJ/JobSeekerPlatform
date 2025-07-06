@@ -25,4 +25,6 @@ public class Job {
     private String description;
     private String requiredSkills;
     private Long employerId;
+    private String location;
+    private String jobTime; // e.g., "full-time", "half-time"
 }

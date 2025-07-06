@@ -9,7 +9,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class JobSeekerDTO {
     private Integer id;
-    private String name;
+    private String username;
     private String email;
     private String resume;
+    private String role;
+    private String password;
+    private String profilePictureUrl;
 }

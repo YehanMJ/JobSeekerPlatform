@@ -4,6 +4,7 @@ import lk.acpt.demo.dto.JobOfferDTO;
 import lk.acpt.demo.entity.JobOffer;
 import lk.acpt.demo.repositories.EmployerRepository;
 import lk.acpt.demo.repositories.JobOfferRepository;
+import lk.acpt.demo.repositories.JobRepository;
 import lk.acpt.demo.util.JWTTokenGenerator;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,13 +19,15 @@ import java.util.List;
 public class JobOfferController {
     private static JobOfferRepository jobOfferRepository;
     private static EmployerRepository employerRepository;
+    private static JobRepository jobRepository;
     private final ModelMapper modelMapper;
     private final JWTTokenGenerator jwtTokenGenerator;
 
     @Autowired
-    public JobOfferController(JobOfferRepository jobOfferRepository, EmployerRepository employerRepository, ModelMapper modelMapper, lk.acpt.demo.util.JWTTokenGenerator jwtTokenGenerator) {
+    public JobOfferController(JobOfferRepository jobOfferRepository, EmployerRepository employerRepository, JobRepository jobRepository, ModelMapper modelMapper, lk.acpt.demo.util.JWTTokenGenerator jwtTokenGenerator) {
         JobOfferController.jobOfferRepository = jobOfferRepository;
         JobOfferController.employerRepository = employerRepository;
+        JobOfferController.jobRepository = jobRepository;
         this.modelMapper = modelMapper;
         this.jwtTokenGenerator = jwtTokenGenerator;
     }
@@ -33,7 +36,12 @@ public class JobOfferController {
     public ResponseEntity<List<JobOfferDTO>> getAll(@RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
         if (jwtTokenGenerator.verifyToken(authorizationHeader)) {
             List<JobOfferDTO> dtos = jobOfferRepository.findAll().stream()
-                .map(offer -> modelMapper.map(offer, JobOfferDTO.class))
+                .map(offer -> {
+                    JobOfferDTO dto = modelMapper.map(offer, JobOfferDTO.class);
+                    if (offer.getJob() != null) dto.setJobId(offer.getJob().getId());
+                    if (offer.getEmployer() != null) dto.setEmployerId(offer.getEmployer().getId());
+                    return dto;
+                })
                 .toList();
             return ResponseEntity.ok(dtos);
         }
@@ -44,7 +52,12 @@ public class JobOfferController {
     public ResponseEntity<JobOfferDTO> getById(@PathVariable Integer id, @RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
         if (jwtTokenGenerator.verifyToken(authorizationHeader)) {
             return jobOfferRepository.findById(id)
-                .map(offer -> ResponseEntity.ok(modelMapper.map(offer, JobOfferDTO.class)))
+                .map(offer -> {
+                    JobOfferDTO dto = modelMapper.map(offer, JobOfferDTO.class);
+                    if (offer.getJob() != null) dto.setJobId(offer.getJob().getId());
+                    if (offer.getEmployer() != null) dto.setEmployerId(offer.getEmployer().getId());
+                    return ResponseEntity.ok(dto);
+                })
                 .orElseGet(() -> ResponseEntity.notFound().build());
         }
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
@@ -54,7 +67,12 @@ public class JobOfferController {
     public ResponseEntity<JobOfferDTO> create(@RequestBody JobOfferDTO dto, @RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
         if (jwtTokenGenerator.verifyToken(authorizationHeader)) {
             JobOffer offer = modelMapper.map(dto, JobOffer.class);
+            if (dto.getJobId() != null) {
+                offer.setJob(jobRepository.findById(dto.getJobId()).orElse(null));
+            }
             JobOfferDTO saved = modelMapper.map(jobOfferRepository.save(offer), JobOfferDTO.class);
+            if (offer.getJob() != null) saved.setJobId(offer.getJob().getId());
+            if (offer.getEmployer() != null) saved.setEmployerId(offer.getEmployer().getId());
             return new ResponseEntity<>(saved, HttpStatus.CREATED);
         }
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
@@ -66,7 +84,14 @@ public class JobOfferController {
             return jobOfferRepository.findById(id)
                 .map(offer -> {
                     modelMapper.map(dto, offer);
-                    return ResponseEntity.ok(modelMapper.map(jobOfferRepository.save(offer), JobOfferDTO.class));
+                    if (dto.getJobId() != null) {
+                        offer.setJob(jobRepository.findById(dto.getJobId()).orElse(null));
+                    }
+                    JobOffer updated = jobOfferRepository.save(offer);
+                    JobOfferDTO updatedDto = modelMapper.map(updated, JobOfferDTO.class);
+                    if (updated.getJob() != null) updatedDto.setJobId(updated.getJob().getId());
+                    if (updated.getEmployer() != null) updatedDto.setEmployerId(updated.getEmployer().getId());
+                    return ResponseEntity.ok(updatedDto);
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
         }

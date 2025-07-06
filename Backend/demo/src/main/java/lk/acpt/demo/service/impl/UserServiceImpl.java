@@ -30,7 +30,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public String login(String username, String password) {
         Optional<User> userOpt = userRepo.findAll().stream()
-                .filter(u -> u.getUsername().equals(username))
+                .filter(u -> username != null && username.equals(u.getUsername()))
                 .findFirst();
         if (userOpt.isPresent()) {
             String encodedPassword = Base64.getEncoder().encodeToString(password.getBytes(StandardCharsets.UTF_8));
@@ -41,4 +41,16 @@ public class UserServiceImpl implements UserService {
         }
         return null;
     }
+
+    @Override
+    public Iterable<User> getAllUsers() {
+        return userRepo.findAll();
+    }
+
+    @Override
+    public User getUserByUsername(String username) {
+        return userRepo.findByUsername(username);
+    }
 }
+
+

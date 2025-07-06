@@ -12,4 +12,5 @@ import lombok.Data;
 @Entity
 public class Trainer extends User {
     private String expertise;
+    private String profilePictureUrl;
 }

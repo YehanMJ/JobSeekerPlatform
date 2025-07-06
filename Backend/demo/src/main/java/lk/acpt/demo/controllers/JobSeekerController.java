@@ -9,21 +9,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import lk.acpt.demo.service.JobSeekerService;
 
 import java.util.List;
-
+@CrossOrigin
 @RestController
 @RequestMapping("/api/job-seekers")
 public class JobSeekerController {
     private static JobSeekerRepository jobSeekerRepository;
     private final ModelMapper modelMapper;
     private final JWTTokenGenerator jwtTokenGenerator;
+    private final JobSeekerService jobSeekerService;
 
     @Autowired
-    public JobSeekerController(JobSeekerRepository jobSeekerRepository, ModelMapper modelMapper, lk.acpt.demo.util.JWTTokenGenerator jwtTokenGenerator) {
+    public JobSeekerController(JobSeekerRepository jobSeekerRepository, ModelMapper modelMapper, lk.acpt.demo.util.JWTTokenGenerator jwtTokenGenerator, JobSeekerService jobSeekerService) {
         JobSeekerController.jobSeekerRepository = jobSeekerRepository;
         this.modelMapper = modelMapper;
         this.jwtTokenGenerator = jwtTokenGenerator;
+        this.jobSeekerService = jobSeekerService;
     }
 
     @GetMapping
@@ -47,14 +51,20 @@ public class JobSeekerController {
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
 
-    @PostMapping
-    public ResponseEntity<JobSeekerDTO> create(@RequestBody JobSeekerDTO dto, @RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
-        if (jwtTokenGenerator.verifyToken(authorizationHeader)) {
-            JobSeeker seeker = modelMapper.map(dto, JobSeeker.class);
-            JobSeekerDTO saved = modelMapper.map(jobSeekerRepository.save(seeker), JobSeekerDTO.class);
-            return new ResponseEntity<>(saved, HttpStatus.CREATED);
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ResponseEntity<JobSeekerDTO> create(
+            @RequestPart("jobSeeker") JobSeekerDTO dto,
+            @RequestPart("file") MultipartFile file,
+            @RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
+        // Registration should not require JWT
+        JobSeeker seeker = modelMapper.map(dto, JobSeeker.class);
+        // Ensure username is set before saving
+        if (dto.getUsername() != null) {
+            seeker.setUsername(dto.getUsername());
         }
-        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        JobSeeker saved = jobSeekerService.createJobSeeker(seeker, file);
+        JobSeekerDTO savedDto = modelMapper.map(saved, JobSeekerDTO.class);
+        return new ResponseEntity<>(savedDto, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
@@ -80,5 +90,31 @@ public class JobSeekerController {
             return ResponseEntity.notFound().build();
         }
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+    }
+
+    @PostMapping("/{id}/upload-cv")
+    public ResponseEntity<?> uploadCv(@PathVariable Integer id, @RequestParam("file") MultipartFile file, @RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
+        if (!jwtTokenGenerator.verifyToken(authorizationHeader)) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        try {
+            JobSeeker updated = jobSeekerService.uploadCv(id, file);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/profile-picture")
+    public ResponseEntity<JobSeekerDTO> uploadProfilePicture(
+            @PathVariable Integer id,
+            @RequestParam("file") MultipartFile file,
+            @RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
+        if (!jwtTokenGenerator.verifyToken(authorizationHeader)) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        JobSeeker updated = jobSeekerService.uploadProfilePicture(id, file);
+        JobSeekerDTO dto = modelMapper.map(updated, JobSeekerDTO.class);
+        return ResponseEntity.ok(dto);
     }
 }

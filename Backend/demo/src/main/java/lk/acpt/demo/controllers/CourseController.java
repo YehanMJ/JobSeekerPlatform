@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/api/courses")
 public class CourseController {
@@ -30,7 +31,14 @@ public class CourseController {
     public ResponseEntity<List<CourseDTO>> getAll(@RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
         if (jwtTokenGenerator.verifyToken(authorizationHeader)) {
             List<CourseDTO> dtos = courseRepository.findAll().stream()
-                .map(course -> modelMapper.map(course, CourseDTO.class))
+                .map(course -> {
+                    CourseDTO dto = new CourseDTO();
+                    dto.setId(course.getId());
+                    dto.setName(course.getTitle());
+                    dto.setDescription(course.getDescription());
+                    dto.setTrainerId(course.getTrainer() != null ? course.getTrainer().getId() : null);
+                    return dto;
+                })
                 .toList();
             return ResponseEntity.ok(dtos);
         }
@@ -41,7 +49,14 @@ public class CourseController {
     public ResponseEntity<CourseDTO> getById(@PathVariable Integer id, @RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
         if (jwtTokenGenerator.verifyToken(authorizationHeader)) {
             return courseRepository.findById(id)
-                .map(course -> ResponseEntity.ok(modelMapper.map(course, CourseDTO.class)))
+                .map(course -> {
+                    CourseDTO dto = new CourseDTO();
+                    dto.setId(course.getId());
+                    dto.setName(course.getTitle());
+                    dto.setDescription(course.getDescription());
+                    dto.setTrainerId(course.getTrainer() != null ? course.getTrainer().getId() : null);
+                    return ResponseEntity.ok(dto);
+                })
                 .orElseGet(() -> ResponseEntity.notFound().build());
         }
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
