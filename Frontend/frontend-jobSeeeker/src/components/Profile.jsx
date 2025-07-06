@@ -120,8 +120,13 @@ const Profile = () => {
       const res = await api.put(url, editUser, {
         headers: { Authorization: token ? `${token}` : undefined }
       });
-      setUser(res.data);
-      setEditUser(res.data);
+      // Preserve the resumeUrl if it exists in the current user state
+      const updatedUser = { ...res.data };
+      if (user.resumeUrl && !updatedUser.resumeUrl) {
+        updatedUser.resumeUrl = user.resumeUrl;
+      }
+      setUser(updatedUser);
+      setEditUser(updatedUser);
     } catch (err) {
       console.error('Profile save error:', err);
     } finally {
@@ -195,7 +200,7 @@ const Profile = () => {
           margin="normal"
         />
         {/* ...role specific fields can be made editable here if needed... */}
-        {editUser?.role === 'jobseeker' && !editUser.resumeUrl && (
+        {editUser?.role === 'jobseeker' && !user.resumeUrl && !editUser.resumeUrl && (
           <Button
             variant="outlined"
             component="label"
@@ -222,8 +227,8 @@ const Profile = () => {
                       'Content-Type': 'multipart/form-data',
                     },
                   });
-                  setUser(prev => ({ ...prev, cvUrl: res.data.cvUrl }));
-                  setEditUser(prev => ({ ...prev, cvUrl: res.data.cvUrl }));
+                  setUser(prev => ({ ...prev, resumeUrl: res.data.resumeUrl }));
+                  setEditUser(prev => ({ ...prev, resumeUrl: res.data.resumeUrl }));
                 } catch (err) {
                   console.error('CV upload error:', err);
                 }

@@ -2,11 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Box, Button, Typography, Card, CardContent, CardActions } from '@mui/material';
-import { api } from '../api';
-import '../App.css';
+import { api } from '../../api';
+import '../../App.css';
 import "@fontsource/quicksand";
-import ProfileButton from '../components/ProfileButton';
-import Navbar from '../components/Navbar';
+import ProfileButton from '../../components/ProfileButton';
+import Navbar from '../../components/Navbar';
 
 const Jobs = () => {
   const navigate = useNavigate();

@@ -5,8 +5,8 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import ClearIcon from '@mui/icons-material/Clear';
 import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import Navbar from '../components/Navbar';
-import { api } from '../api';
+import Navbar from '../../components/Navbar';
+import { api } from '../../api';
 
 const jobTypes = ['Full-Time', 'Part-Time', 'Internship', 'Contract'];
 const modalities = ['Onsite', 'Remote', 'Hybrid'];

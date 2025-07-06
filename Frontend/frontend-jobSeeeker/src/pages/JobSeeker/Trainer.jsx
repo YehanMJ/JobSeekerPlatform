@@ -1,12 +1,12 @@
 // Trainer main page
 import React, { useEffect, useState } from 'react';
-import { api } from '../api';
+import { api } from '../../api';
 import { AppBar, Toolbar, Box, Button, Typography, Card, CardActions, Avatar, Rating, Fade } from '@mui/material';
-import '../App.css';
+import '../../App.css';
 import "@fontsource/quicksand";
-import ProfileButton from '../components/ProfileButton';
+import ProfileButton from '../../components/ProfileButton';
 import { Link } from 'react-router-dom';
-import Navbar from '../components/Navbar';
+import Navbar from '../../components/Navbar';
 
 const Trainer = () => {
   const [trainers, setTrainers] = useState([]);

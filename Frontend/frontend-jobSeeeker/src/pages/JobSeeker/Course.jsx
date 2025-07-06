@@ -1,51 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Box, Button, Typography, Card, CardContent, CardActions, CircularProgress } from '@mui/material';
-import pp1 from '../assets/pp1.jpeg';
-import pp2 from '../assets/pp2.jpg';
-import pp3 from '../assets/pp3.jpg';
-import pp4 from '../assets/pp4.jpeg';
-import pp6 from '../assets/pp6.avif';
-import { api } from '../api';
+import { api } from '../../api';
+import '../../App.css';
+import "@fontsource/quicksand";
+import ProfileButton from '../../components/ProfileButton';
+import Navbar from '../../components/Navbar';
+import { Link, useNavigate } from 'react-router-dom';
+import { Box, Button, Typography, Card, CardContent, CardActions, CircularProgress } from '@mui/material';
+import { api } from '../../api';
 import '../App.css';
 import "@fontsource/quicksand";
-import ProfileButton from '../components/ProfileButton';
-import Navbar from '../components/Navbar';
+import ProfileButton from '../../components/ProfileButton';
+import Navbar from '../../components/Navbar';
 
-const images = [pp6, pp2, pp3];
-
-const Home = () => {
+const Course = () => {
   const navigate = useNavigate();
-  const [current, setCurrent] = useState(0);
-  const [jobs, setJobs] = useState([]);
-  const [employers, setEmployers] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [trainers, setTrainers] = useState([]);
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true); // Add loading state
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % images.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    const fetchJobs = async () => {
+    const fetchCourses = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await api.get('/jobs', {
+        const res = await api.get('/courses', {
           headers: { Authorization: token ? `${token}` : undefined }
         });
         if (Array.isArray(res.data)) {
           // Sort by id descending, take last 20
           const sorted = [...res.data].sort((a, b) => b.id - a.id).slice(0, 20);
-          setJobs(sorted);
+          setCourses(sorted);
         }
       } catch (err) {
-        setJobs([]);
+        setCourses([]);
       }
     };
-    fetchJobs();
+    fetchCourses();
   }, []);
 
   useEffect(() => {
@@ -56,7 +48,6 @@ const Home = () => {
           headers: { Authorization: token ? `${token}` : undefined }
         });
         if (Array.isArray(res.data)) {
-            console.log(res.data);
           setUsers(res.data);
         }
       } catch (err) {
@@ -79,7 +70,7 @@ const Home = () => {
   };
 
   return (
-    <Box className="home-container" sx={{ minHeight: '100vh', position: 'relative', background: 'linear-gradient(135deg,rgb(0, 0, 0) 0%,rgb(0, 0, 0) 100%)', overflowX: 'hidden', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+    <Box className="course-container" sx={{ minHeight: '100vh', position: 'relative', background: 'linear-gradient(135deg,rgb(0, 0, 0) 0%,rgb(0, 0, 0) 100%)', overflowX: 'hidden', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
       {/* Prevent body scroll on x-axis */}
       <style>{`
         body { overflow-x: hidden !important; }
@@ -118,37 +109,10 @@ const Home = () => {
       )}
       {!loading && (
         <>
-          <Box sx={{ position: 'relative', width: '100%', height: '50vh', zIndex: 0, overflow: 'hidden' }}>
-            {images.map((img, idx) => {
-              // Always slide left, even when wrapping from last to first
-              let offset = idx - current;
-              if (offset < -1) offset += images.length;
-              if (offset > 1) offset -= images.length;
-              return (
-                <img
-                  key={idx}
-                  src={img}
-                  alt={`slide-${idx}`}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    transition: 'transform 0.7s cubic-bezier(0.4,0,0.2,1), opacity 0.7s cubic-bezier(0.4,0,0.2,1)',
-                    transform: `translateX(${100 * offset}%)`,
-                    opacity: idx === current ? 1 : 0,
-                    zIndex: idx === current ? 1 : 0,
-                  }}
-                />
-              );
-            })}
-            <Navbar onLogout={handleLogout} position="sticky" />
-          </Box>
-          <Box className="home-content" sx={{
-            position: 'absolute',
-            top: 180, // fixed distance from top, keeps box in place
+          <Navbar onLogout={handleLogout} position="sticky" />
+          <Box className="course-content" sx={{
+            position: 'relative',
+            top: 100, // fixed distance from top
             left: '50%',
             transform: 'translateX(-50%)', // only horizontal centering
             zIndex: 3,
@@ -158,20 +122,22 @@ const Home = () => {
             color: '#fff',
             p: 3,
             m: 0,
+            mb: 6,
+            borderRadius: 3,
             boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
             fontFamily: 'Quicksand, sans-serif',
           }}>
             <Typography variant="h4" sx={{ color: '#fff', mb: 2, fontWeight: 700, fontFamily: 'Quicksand, sans-serif', fontSize: '3rem' }}>
-              Welcome to the Job Seeker Platform!
+              Explore Available Courses
             </Typography>
             <Typography sx={{ color: '#ffffff !important', fontSize: '2.1rem !important', fontFamily: 'Quicksand, sans-serif' }}>
-              Your future career starts here.
+              Enhance your skills with our professional courses.
             </Typography>
           </Box>
-          {/* Recent Jobs Section */}
+          {/* Courses Section */}
           <Box sx={{
             width: '100%',
-            mt: 6,
+            mt: 25,
             px: { xs: 2, md: 8 },
             display: 'flex',
             flexWrap: 'wrap',
@@ -182,7 +148,7 @@ const Home = () => {
             maxWidth: '100vw',
           }}>
             <style>{`
-              .job-card-custom {
+              .course-card-custom {
                 border-radius: 18px !important;
                 box-shadow: 0 4px 16px 0 rgba(31,38,135,0.10) !important;
                 background: #fff !important;
@@ -194,7 +160,7 @@ const Home = () => {
                 flex-direction: column;
                 align-items: center;
               }
-              .job-badge {
+              .course-badge {
                 position: absolute;
                 top: 18px;
                 right: 18px;
@@ -206,7 +172,7 @@ const Home = () => {
                 padding: 4px 14px;
                 z-index: 2;
               }
-              .job-daysleft {
+              .course-duration {
                 position: absolute;
                 top: 18px;
                 left: 18px;
@@ -221,17 +187,7 @@ const Home = () => {
                 z-index: 2;
                 gap: 4px;
               }
-              .job-company-logo {
-                width: 60px;
-                height: 60px;
-                object-fit: contain;
-                margin: 0 auto 10px auto;
-                display: block;
-                border-radius: 8px;
-                background: #f5f5f5;
-                border: 1px solid #eee;
-              }
-              .job-apply-btn {
+              .course-enroll-btn {
                 border-radius: 22px !important;
                 border: 1.5px solid #ff4d4f !important;
                 color: #ff4d4f !important;
@@ -242,11 +198,11 @@ const Home = () => {
                 background: #fff !important;
                 transition: background 0.2s;
               }
-              .job-apply-btn:hover {
+              .course-enroll-btn:hover {
                 background: #fff0f0 !important;
                 border-color: #ff7875 !important;
               }
-              .job-card-animate {
+              .course-card-animate {
                 opacity: 0;
                 transform: translateY(30px);
                 animation: fadeInUp 0.7s forwards;
@@ -258,43 +214,36 @@ const Home = () => {
                 }
               }
             `}</style>
-            {jobs.length > 0 ? jobs.map((job, idx) => {
-              // Calculate days left (if job.deadline exists)
-              let daysLeft = null;
-              if (job.deadline) {
-                const deadline = new Date(job.deadline);
-                const now = new Date();
-                daysLeft = Math.max(0, Math.ceil((deadline - now) / (1000 * 60 * 60 * 24)));
-              }
-              // Job type badge (default: Full-time Job)
-              const jobType = job.jobTime || 'Full-time Job';
-              // Find user by employerId
-              const employerUser = users.find(u => u.id === job.employerId);
+            {courses.length > 0 ? courses.map((course, idx) => {
+              // Find trainer by trainerId
+              const trainerUser = users.find(u => u.id === course.trainerId);
               return (
-                <Card key={job.id} className="job-card-custom job-card-animate" sx={{ minWidth: 280, maxWidth: 340, flex: '1 1 300px', p: 0, animationDelay: `${idx * 80}ms` }} style={{ animationDelay: `${idx * 80}ms` }}>
-                  {/* Days left */}
-                  <span className="job-daysleft">
+                <Card key={course.id} className="course-card-custom course-card-animate" sx={{ minWidth: 280, maxWidth: 340, flex: '1 1 300px', p: 0, animationDelay: `${idx * 80}ms` }} style={{ animationDelay: `${idx * 80}ms` }}>
+                  {/* Course duration */}
+                  <span className="course-duration">
                     <svg width="18" height="18" fill="none" viewBox="0 0 24 24" style={{marginRight:4}}><path d="M12 8v5l3 2" stroke="#888" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="12" r="9" stroke="#888" strokeWidth="1.7"/></svg>
-                    {daysLeft !== null ? `${daysLeft} days left` : 'Open'}
+                    {course.duration || 'N/A'}
                   </span>
-                  {/* Job type badge */}
-                  <span className="job-badge">{jobType}</span>
+                  {/* Course type badge */}
+                  <span className="course-badge">{course.category || 'Course'}</span>
                   <CardContent sx={{ pt: 7, pb: 1, px: 2, textAlign: 'center', flex: 1 }}>
-                    {/* Removed logo image here */}
-                    <Typography sx={{ color: '#888', fontWeight: 500, fontSize: '1.05rem', mt: 1, mb: 0.5, fontFamily: 'Quicksand, sans-serif' }}>{employerUser ? employerUser.companyName : 'Company Name'}</Typography>
-                    <Typography variant="h6" sx={{ color: '#222', fontWeight: 700, fontFamily: 'Quicksand, sans-serif', fontSize: '1.18rem', mb: 0.5 }}>{job.title}</Typography>
+                    <Typography sx={{ color: '#888', fontWeight: 500, fontSize: '1.05rem', mt: 1, mb: 0.5, fontFamily: 'Quicksand, sans-serif' }}>{trainerUser ? trainerUser.fullName || trainerUser.username : 'Trainer Name'}</Typography>
+                    <Typography variant="h6" sx={{ color: '#222', fontWeight: 700, fontFamily: 'Quicksand, sans-serif', fontSize: '1.18rem', mb: 0.5 }}>{course.title}</Typography>
+                    <Typography sx={{ color: '#b0b0b0', fontSize: '1.01rem', fontFamily: 'Quicksand, sans-serif', mb: 1 }}>
+                      {course.description || 'Course description'}
+                    </Typography>
                     <Typography sx={{ color: '#b0b0b0', fontSize: '1.01rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontFamily: 'Quicksand, sans-serif', mb: 1 }}>
                       <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#b0b0b0"/></svg>
-                      {job.location || 'N/A'}
+                      {course.price ? `$${course.price}` : 'Free'}
                     </Typography>
                   </CardContent>
                   <CardActions sx={{ justifyContent: 'center', pb: 1 }}>
-                    <Button size="medium" variant="outlined" className="job-apply-btn">Apply Now</Button>
+                    <Button size="medium" variant="outlined" className="course-enroll-btn">Enroll Now</Button>
                   </CardActions>
                 </Card>
               );
             }) : (
-              <Typography sx={{ color: '#fff', fontFamily: 'Quicksand, sans-serif', mt: 4 }}>No recent jobs found.</Typography>
+              <Typography sx={{ color: '#fff', fontFamily: 'Quicksand, sans-serif', mt: 4 }}>No courses found.</Typography>
             )}
           </Box>
         </>
@@ -303,4 +252,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Course;

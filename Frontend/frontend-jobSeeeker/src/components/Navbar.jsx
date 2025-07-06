@@ -14,6 +14,7 @@ const Navbar = ({ onLogout, position = 'absolute' }) => (
         <Button color="inherit" component={Link} to="/home">Home</Button>
         <Button color="inherit" component={Link} to="/jobseeker">Jobs</Button>
         <Button color="inherit" component={Link} to="/trainer">Trainers</Button>
+        <Button color="inherit" component={Link} to="/course">Course</Button>
         <Button color="inherit" component={Link} to="/filter">Filter</Button>
         <ProfileButton sx={{ ml: 2 }} />
       </Box>

@@ -1,13 +1,14 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
-import JobSeeker from './pages/Jobs';
+import JobSeeker from './pages/JobSeeker/Jobs';
 import Employer from './pages/Employer';
-import Trainer from './pages/Trainer';
+import Trainer from './pages/JobSeeker/Trainer';
 import Admin from './pages/Admin';
 import Auth from './pages/Auth';
-import Home from './pages/Home';
+import Home from './pages/JobSeeker/Home';
 import ProfilePage from './pages/ProfilePage';
-import Filter from './pages/Filter';
+import Filter from './pages/JobSeeker/Filter';
+import Course from './pages/JobSeeker/Course';
 import './App.css';
 
 function App() {
@@ -54,6 +55,7 @@ function App() {
         <Route path="/login" element={<Auth />} />
         <Route path="/profile/edit" element={<ProfilePage />} />
         <Route path="/filter" element={<Filter />} />
+        <Route path="/course" element={<Course />} />
         {/* <Route path="/" element={<div>Welcome! Please select a role above.</div>} /> */}
       </Routes>
     </>
