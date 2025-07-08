@@ -97,4 +97,17 @@ public class EmployerController {
         EmployerDTO dto = modelMapper.map(updated, EmployerDTO.class);
         return ResponseEntity.ok(dto);
     }
+
+    @PostMapping("/{id}/company-logo")
+    public ResponseEntity<EmployerDTO> uploadCompanyLogo(
+            @PathVariable Integer id,
+            @RequestParam("file") MultipartFile file,
+            @RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
+        if (!jwtTokenGenerator.verifyToken(authorizationHeader)) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        Employer updated = employerService.uploadCompanyLogo(id, file);
+        EmployerDTO dto = modelMapper.map(updated, EmployerDTO.class);
+        return ResponseEntity.ok(dto);
+    }
 }

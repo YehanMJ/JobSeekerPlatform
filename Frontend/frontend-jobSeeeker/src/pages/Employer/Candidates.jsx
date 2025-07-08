@@ -5,6 +5,7 @@ import '../../App.css';
 import "@fontsource/quicksand";
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
+import CandidateProfile from '../../components/CandidateProfile';
 
 const Candidates = () => {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ const Candidates = () => {
   const [selectedTab, setSelectedTab] = useState(0);
   const [applications, setApplications] = useState([]);
   const [jobs, setJobs] = useState([]);
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -117,6 +119,44 @@ const Candidates = () => {
     return fixedUrl;
   };
 
+  // Helper to get correct CV URL
+  const getCVUrl = (url) => {
+    if (!url) return undefined;
+    let fixedUrl = url;
+    if (url.startsWith('/uploads')) {
+      fixedUrl = `http://localhost:8080${url}`;
+    } else if (url.startsWith('C:') || url.startsWith('/C:')) {
+      // Handle Windows absolute paths - convert to relative path
+      const pathParts = url.split('/');
+      const uploadsIndex = pathParts.findIndex(part => part === 'uploads');
+      if (uploadsIndex !== -1) {
+        const relativePath = '/' + pathParts.slice(uploadsIndex).join('/');
+        fixedUrl = `http://localhost:8080${relativePath}`;
+      }
+    }
+    if (fixedUrl.match(/^https?:\/\//)) {
+      // Remove accidental double slashes after host
+      fixedUrl = fixedUrl.replace(/([^:]\/)\/+/, '$1/');
+    }
+    return fixedUrl;
+  };
+
+  // Helper to handle CV link click
+  const handleCVClick = (cvUrl) => {
+    const fixedUrl = getCVUrl(cvUrl);
+    if (fixedUrl) {
+      window.open(fixedUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handleViewProfile = (candidate) => {
+    setSelectedCandidate(candidate);
+  };
+
+  const handleCloseProfile = () => {
+    setSelectedCandidate(null);
+  };
+
   return (
     <Box className="candidates-container" sx={{ minHeight: '100vh', position: 'relative', background: 'linear-gradient(135deg,rgb(0, 0, 0) 0%,rgb(0, 0, 0) 100%)', overflowX: 'hidden', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
       <Navbar onLogout={handleLogout} position="absolute" />
@@ -174,7 +214,7 @@ const Candidates = () => {
                     alt={candidate.username}
                   />
                   <Box sx={{ flex: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', mb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', mb: 2, mt:1 }}>
                       <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.3rem', color: '#004080' }}>
                         {candidate.fullName || candidate.username}
                       </Typography>
@@ -206,17 +246,27 @@ const Candidates = () => {
                     )}
                     
                     <Typography sx={{ mt: 1, color: '#444', fontSize: '1.05rem', mb: 2 }}>
-                      {candidate.bio || 'Professional seeking new opportunities.'}
+                      {candidate.about || candidate.bio || 'Professional seeking new opportunities.'}
                     </Typography>
+                    
+                    {/* Experience Section */}
+                    {candidate.experience && (
+                      <Box sx={{ mb: 2 }}>
+                        <Typography sx={{ fontWeight: 600, color: '#333', fontSize: '0.95rem', mb: 1 }}>
+                          Experience:
+                        </Typography>
+                        <Typography sx={{ color: '#666', fontSize: '0.9rem', whiteSpace: 'pre-line' }}>
+                          {candidate.experience.length > 150 ? `${candidate.experience.substring(0, 150)}...` : candidate.experience}
+                        </Typography>
+                      </Box>
+                    )}
                   
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                     {candidate.resumeUrl && (
                       <Button
                         variant="outlined"
                         size="small"
-                        href={candidate.resumeUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        onClick={() => handleCVClick(candidate.resumeUrl)}
                         sx={{ 
                           borderColor: '#1976d2', 
                           color: '#1976d2',
@@ -232,7 +282,8 @@ const Candidates = () => {
                   </Box>
                   
                   <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    {(candidate.skills || ['Problem Solving', 'Communication', 'Team Work']).slice(0, 5).map((skill, i) => (
+                    {/* Show skills from the new skills field or fallback to default */}
+                    {(candidate.skills ? candidate.skills.split(',').map(skill => skill.trim()) : ['Problem Solving', 'Communication', 'Team Work']).slice(0, 5).map((skill, i) => (
                       <Chip 
                         key={i} 
                         label={skill} 
@@ -246,9 +297,9 @@ const Candidates = () => {
                         }}
                       />
                     ))}
-                    {candidate.skills && candidate.skills.length > 5 && (
+                    {candidate.skills && candidate.skills.split(',').length > 5 && (
                       <Typography sx={{ ml: 1, color: '#888', fontSize: '0.95rem', alignSelf: 'center' }}>
-                        +{candidate.skills.length - 5} more
+                        +{candidate.skills.split(',').length - 5} more
                       </Typography>
                     )}
                   </Box>
@@ -270,6 +321,7 @@ const Candidates = () => {
                   <Button 
                     variant="outlined" 
                     size="small"
+                    onClick={() => handleViewProfile(candidate)}
                     sx={{ 
                       fontWeight: 600, 
                       px: 2,
@@ -291,6 +343,14 @@ const Candidates = () => {
           )}
         </Box>
       </Box>
+      
+      {/* Candidate Profile Modal */}
+      {selectedCandidate && (
+        <CandidateProfile 
+          candidate={selectedCandidate} 
+          onClose={handleCloseProfile} 
+        />
+      )}
     </Box>
   );
 };

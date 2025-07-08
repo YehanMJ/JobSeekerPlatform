@@ -50,6 +50,10 @@ public class TrainerServiceImpl implements TrainerService {
         if (file == null || file.isEmpty()) {
             throw new RuntimeException("Invalid file. Please upload an image file.");
         }
+
+        // Delete old profile picture if it exists
+        deleteOldProfilePicture(trainer.getProfilePictureUrl());
+
         String uploadDir = System.getProperty("user.dir") + java.io.File.separator + "uploads" + java.io.File.separator + "profile";
         java.io.File dir = new java.io.File(uploadDir);
         if (!dir.exists()) dir.mkdirs();
@@ -64,5 +68,22 @@ public class TrainerServiceImpl implements TrainerService {
         String fullUrl = "http://localhost:8080/uploads/profile/" + fileName;
         trainer.setProfilePictureUrl(fullUrl);
         return trainerRepository.save(trainer);
+    }
+
+    private void deleteOldProfilePicture(String profilePictureUrl) {
+        if (profilePictureUrl != null && !profilePictureUrl.isEmpty()) {
+            try {
+                // Extract filename from URL
+                String fileName = profilePictureUrl.substring(profilePictureUrl.lastIndexOf("/") + 1);
+                String uploadDir = System.getProperty("user.dir") + java.io.File.separator + "uploads" + java.io.File.separator + "profile";
+                java.io.File oldFile = new java.io.File(uploadDir, fileName);
+                if (oldFile.exists()) {
+                    oldFile.delete();
+                }
+            } catch (Exception e) {
+                // Log the error but don't stop the upload process
+                System.err.println("Failed to delete old profile picture: " + e.getMessage());
+            }
+        }
     }
 }

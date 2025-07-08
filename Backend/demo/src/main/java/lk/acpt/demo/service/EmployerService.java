@@ -10,4 +10,5 @@ public interface EmployerService {
     Employer updateEmployer(Integer id, Employer employer);
     void deleteEmployer(Integer id);
     Employer uploadProfilePicture(Integer id, org.springframework.web.multipart.MultipartFile file);
+    Employer uploadCompanyLogo(Integer id, org.springframework.web.multipart.MultipartFile file);
 }

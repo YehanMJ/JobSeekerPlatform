@@ -13,5 +13,15 @@ public class UserDetailsDTO {
     private String resumeUrl;
     private String expertise;
     private String profilePictureUrl;
+    private String about;
+    private String skills;
+    private String experience;
+    // Employer company fields
+    private String companyLogoUrl;
+    private String location;
+    private String overview;
+    private String industry;
+    private String companySize;
+    private String website;
 }
 

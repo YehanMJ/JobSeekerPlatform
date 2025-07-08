@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, Paper, TextField, Button, Grid, Card, CardContent, IconButton, Chip, Alert } from '@mui/material';
+import { Box, Typography, Paper, TextField, Button, Grid, Card, CardContent, IconButton, Chip, Alert, MenuItem } from '@mui/material';
 import { Add, Delete, CloudUpload } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
@@ -74,20 +74,32 @@ const UploadCourses = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const trainerId = sessionStorage.getItem('id');
+      const trainerId = parseInt(sessionStorage.getItem('id'));
 
-      // TODO: Replace with actual API endpoint
       const payload = {
-        ...courseData,
+        title: courseData.title,
+        description: courseData.description,
+        duration: courseData.duration,
+        level: courseData.level,
+        category: courseData.category,
+        prerequisites: courseData.prerequisites,
+        modules: courseData.modules.map(module => ({
+          title: module.title,
+          description: module.description,
+          duration: module.duration
+        })),
         trainerId: trainerId,
         createdAt: new Date().toISOString()
       };
 
-      // Mock API call for now
-      console.log('Course data to submit:', payload);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await api.post('/courses', payload, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('Course created successfully:', response.data);
       
       setSuccess(true);
       setCourseData({
@@ -106,7 +118,11 @@ const UploadCourses = () => {
 
     } catch (err) {
       console.error('Error uploading course:', err);
-      setError('Failed to upload course. Please try again.');
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError('Failed to upload course. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -201,13 +217,17 @@ const UploadCourses = () => {
                   onChange={handleInputChange}
                   required
                   select
-                  SelectProps={{ native: true }}
                   variant="outlined"
+                  SelectProps={{
+                    displayEmpty: true,
+                  }}
+                  sx={{ minWidth: 200 }}
                 >
-                  <option value="">Select Level</option>
-                  <option value="Beginner">Beginner</option>
-                  <option value="Intermediate">Intermediate</option>
-                  <option value="Advanced">Advanced</option>
+                  <MenuItem value="" disabled>
+                  </MenuItem>
+                  <MenuItem value="Beginner">Beginner</MenuItem>
+                  <MenuItem value="Intermediate">Intermediate</MenuItem>
+                  <MenuItem value="Advanced">Advanced</MenuItem>
                 </TextField>
               </Grid>
 
@@ -220,18 +240,22 @@ const UploadCourses = () => {
                   onChange={handleInputChange}
                   required
                   select
-                  SelectProps={{ native: true }}
                   variant="outlined"
+                  SelectProps={{
+                    displayEmpty: true,
+                  }}
+                  sx={{ minWidth: 200 }}
                 >
-                  <option value="">Select Category</option>
-                  <option value="Web Development">Web Development</option>
-                  <option value="Mobile Development">Mobile Development</option>
-                  <option value="Data Science">Data Science</option>
-                  <option value="AI/ML">AI/ML</option>
-                  <option value="Cloud Computing">Cloud Computing</option>
-                  <option value="Cybersecurity">Cybersecurity</option>
-                  <option value="DevOps">DevOps</option>
-                  <option value="Other">Other</option>
+                  <MenuItem value="" disabled>
+                  </MenuItem>
+                  <MenuItem value="Web Development">Web Development</MenuItem>
+                  <MenuItem value="Mobile Development">Mobile Development</MenuItem>
+                  <MenuItem value="Data Science">Data Science</MenuItem>
+                  <MenuItem value="AI/ML">AI/ML</MenuItem>
+                  <MenuItem value="Cloud Computing">Cloud Computing</MenuItem>
+                  <MenuItem value="Cybersecurity">Cybersecurity</MenuItem>
+                  <MenuItem value="DevOps">DevOps</MenuItem>
+                  <MenuItem value="Other">Other</MenuItem>
                 </TextField>
               </Grid>
 

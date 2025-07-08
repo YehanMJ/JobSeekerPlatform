@@ -29,7 +29,7 @@ public class JobSeekerServiceImpl implements JobSeekerService {
 
     @Override
     public JobSeeker createJobSeeker(JobSeeker jobSeeker, MultipartFile file) {
-        if (file == null || file.isEmpty() || !file.getOriginalFilename().endsWith(".pdf")) {
+        if (file == null || file.isEmpty() || (file.getOriginalFilename() != null && !file.getOriginalFilename().endsWith(".pdf"))) {
             throw new RuntimeException("Invalid file. Please upload a PDF file.");
         }
         // Encode password with Base64
@@ -48,7 +48,7 @@ public class JobSeekerServiceImpl implements JobSeekerService {
         } catch (IOException e) {
             throw new RuntimeException("Failed to save file.", e);
         }
-        savedJobSeeker.setResumeUrl("/" + uploadDir + fileName);
+        savedJobSeeker.setResumeUrl("http://localhost:8080/uploads/cv/" + fileName);
         return jobSeekerRepository.save(savedJobSeeker);
     }
 
@@ -68,10 +68,14 @@ public class JobSeekerServiceImpl implements JobSeekerService {
     @Override
     public JobSeeker uploadCv(Integer id, MultipartFile file) {
         JobSeeker jobSeeker = getJobSeekerById(id);
-        if (file == null || file.isEmpty() || !file.getOriginalFilename().endsWith(".pdf")) {
+        if (file == null || file.isEmpty() || (file.getOriginalFilename() != null && !file.getOriginalFilename().endsWith(".pdf"))) {
             throw new RuntimeException("Invalid file. Please upload a PDF file.");
         }
-        String uploadDir = "uploads/cv/";
+
+        // Delete old CV if it exists
+        deleteOldCv(jobSeeker.getResumeUrl());
+
+        String uploadDir = System.getProperty("user.dir") + File.separator + "uploads" + File.separator + "cv";
         File dir = new File(uploadDir);
         if (!dir.exists()) dir.mkdirs();
         // Use username instead of id in the file name
@@ -83,7 +87,7 @@ public class JobSeekerServiceImpl implements JobSeekerService {
         } catch (IOException e) {
             throw new RuntimeException("Failed to save file.", e);
         }
-        jobSeeker.setResumeUrl("/" + uploadDir + fileName);
+        jobSeeker.setResumeUrl("http://localhost:8080/uploads/cv/" + fileName);
         return jobSeekerRepository.save(jobSeeker);
     }
 
@@ -93,6 +97,10 @@ public class JobSeekerServiceImpl implements JobSeekerService {
         if (file == null || file.isEmpty()) {
             throw new RuntimeException("Invalid file. Please upload an image file.");
         }
+
+        // Delete old profile picture if it exists
+        deleteOldProfilePicture(jobSeeker.getProfilePictureUrl());
+
         String uploadDir = System.getProperty("user.dir") + File.separator + "uploads" + File.separator + "profile";
         File dir = new File(uploadDir);
         if (!dir.exists()) dir.mkdirs();
@@ -107,5 +115,39 @@ public class JobSeekerServiceImpl implements JobSeekerService {
         String fullUrl = "http://localhost:8080/uploads/profile/" + fileName;
         jobSeeker.setProfilePictureUrl(fullUrl);
         return jobSeekerRepository.save(jobSeeker);
+    }
+
+    private void deleteOldProfilePicture(String profilePictureUrl) {
+        if (profilePictureUrl != null && !profilePictureUrl.isEmpty()) {
+            try {
+                // Extract filename from URL
+                String fileName = profilePictureUrl.substring(profilePictureUrl.lastIndexOf("/") + 1);
+                String uploadDir = System.getProperty("user.dir") + File.separator + "uploads" + File.separator + "profile";
+                File oldFile = new File(uploadDir, fileName);
+                if (oldFile.exists()) {
+                    oldFile.delete();
+                }
+            } catch (Exception e) {
+                // Log the error but don't stop the upload process
+                System.err.println("Failed to delete old profile picture: " + e.getMessage());
+            }
+        }
+    }
+
+    private void deleteOldCv(String resumeUrl) {
+        if (resumeUrl != null && !resumeUrl.isEmpty()) {
+            try {
+                // Extract filename from URL
+                String fileName = resumeUrl.substring(resumeUrl.lastIndexOf("/") + 1);
+                String uploadDir = System.getProperty("user.dir") + File.separator + "uploads" + File.separator + "cv";
+                File oldFile = new File(uploadDir, fileName);
+                if (oldFile.exists()) {
+                    oldFile.delete();
+                }
+            } catch (Exception e) {
+                // Log the error but don't stop the upload process
+                System.err.println("Failed to delete old CV: " + e.getMessage());
+            }
+        }
     }
 }

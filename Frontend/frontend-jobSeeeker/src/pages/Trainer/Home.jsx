@@ -30,13 +30,14 @@ const TrainerHome = () => {
         });
         setTrainer(trainerRes.data);
 
-        // Fetch courses (mock data for now)
-        // TODO: Replace with actual API call
-        setCourses([
-          { id: 1, title: 'React Development', students: 25, status: 'Active' },
-          { id: 2, title: 'Node.js Backend', students: 18, status: 'Active' },
-          { id: 3, title: 'Database Design', students: 12, status: 'Completed' },
-        ]);
+        // Fetch courses created by this trainer
+        const coursesRes = await api.get('/courses', {
+          headers: { Authorization: token ? `${token}` : undefined }
+        });
+        
+        // Filter courses by trainer ID
+        const trainerCourses = coursesRes.data.filter(course => course.trainerId === parseInt(userId));
+        setCourses(trainerCourses);
 
         // Fetch trainees (mock data for now)
         // TODO: Replace with actual API call
@@ -98,10 +99,10 @@ const TrainerHome = () => {
             <Card elevation={2} sx={{ borderRadius: 2, background: 'linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)' }}>
               <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 600, color: '#1e3c72' }}>
-                  Active Courses
+                  Total Courses
                 </Typography>
                 <Typography variant="h3" sx={{ fontWeight: 700, color: '#1e3c72' }}>
-                  {courses.filter(c => c.status === 'Active').length}
+                  {courses.length}
                 </Typography>
               </CardContent>
             </Card>
@@ -110,10 +111,10 @@ const TrainerHome = () => {
             <Card elevation={2} sx={{ borderRadius: 2, background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)' }}>
               <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 600, color: '#1e3c72' }}>
-                  Total Students
+                  Course Categories
                 </Typography>
                 <Typography variant="h3" sx={{ fontWeight: 700, color: '#1e3c72' }}>
-                  {courses.reduce((sum, c) => sum + c.students, 0)}
+                  {new Set(courses.map(c => c.category)).size}
                 </Typography>
               </CardContent>
             </Card>
@@ -122,10 +123,10 @@ const TrainerHome = () => {
             <Card elevation={2} sx={{ borderRadius: 2, background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)' }}>
               <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 600, color: '#1e3c72' }}>
-                  Completed Courses
+                  Total Duration
                 </Typography>
                 <Typography variant="h3" sx={{ fontWeight: 700, color: '#1e3c72' }}>
-                  {courses.filter(c => c.status === 'Completed').length}
+                  {courses.reduce((sum, c) => sum + (parseInt(c.duration) || 0), 0)}h
                 </Typography>
               </CardContent>
             </Card>
@@ -204,19 +205,25 @@ const TrainerHome = () => {
             My Courses
           </Typography>
           <Grid container spacing={3}>
-            {courses.map((course) => (
+            {courses.length > 0 ? courses.map((course) => (
               <Grid item xs={12} md={6} lg={4} key={course.id}>
                 <Card elevation={2} sx={{ borderRadius: 2, height: '100%' }}>
                   <CardContent>
                     <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
                       {course.title}
                     </Typography>
+                    <Typography sx={{ color: '#777', mb: 1 }}>
+                      Category: {course.category}
+                    </Typography>
+                    <Typography sx={{ color: '#777', mb: 1 }}>
+                      Level: {course.level}
+                    </Typography>
                     <Typography sx={{ color: '#777', mb: 2 }}>
-                      Students: {course.students}
+                      Duration: {course.duration} hours
                     </Typography>
                     <Chip 
-                      label={course.status} 
-                      color={course.status === 'Active' ? 'success' : 'default'}
+                      label={course.category} 
+                      color="primary"
                       sx={{ mb: 2 }}
                     />
                     <Button 
@@ -229,7 +236,13 @@ const TrainerHome = () => {
                   </CardContent>
                 </Card>
               </Grid>
-            ))}
+            )) : (
+              <Grid item xs={12}>
+                <Typography sx={{ color: '#777', textAlign: 'center', py: 4 }}>
+                  No courses created yet. Upload your first course to get started!
+                </Typography>
+              </Grid>
+            )}
           </Grid>
         </Paper>
 

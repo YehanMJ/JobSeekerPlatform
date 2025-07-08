@@ -1,18 +1,28 @@
 // Job Seeker main page
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Box, Button, Typography, Card, CardContent, CardActions } from '@mui/material';
+import { Box, Button, Typography, Card, CardContent, CardActions, TextField, MenuItem, InputAdornment, Select, FormControl, InputLabel, IconButton, Divider } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import ClearIcon from '@mui/icons-material/Clear';
 import { api } from '../../api';
 import '../../App.css';
 import "@fontsource/quicksand";
 import ProfileButton from '../../components/ProfileButton';
 import Navbar from '../../components/Navbar';
 
+const jobTypes = ['Full-Time', 'Part-Time', 'Internship', 'Contract'];
+const modalities = ['Onsite', 'Remote', 'Hybrid'];
+const countries = ['Sri Lanka', 'India', 'Remote', 'Other'];
+const salaries = ['< $500', '$500 - $1000', '$1000 - $2000', '$2000+'];
+
 const Jobs = () => {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState({ title: '', location: '', company: '', jobType: '', modality: '', country: '', salary: '' });
+  const [appliedJobs, setAppliedJobs] = useState(new Set());
 
   useEffect(() => {
     let timer;
@@ -53,13 +63,96 @@ const Jobs = () => {
     fetchUsers();
   }, []);
 
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const userId = sessionStorage.getItem('id');
+        
+        if (!userId) return;
+
+        const res = await api.get('/applications', {
+          headers: { Authorization: token ? `${token}` : undefined }
+        });
+        
+        if (Array.isArray(res.data)) {
+          // Filter applications by current user and create a set of applied job IDs
+          const userApplications = res.data.filter(app => app.jobSeekerId === parseInt(userId));
+          const appliedJobIds = new Set(userApplications.map(app => app.jobId));
+          setAppliedJobs(appliedJobIds);
+        }
+      } catch (err) {
+        console.error('Error fetching applications:', err);
+      }
+    };
+    fetchApplications();
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/login');
   };
 
+  const handleApply = async (jobId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const userId = sessionStorage.getItem('id');
+      
+      if (!userId) {
+        alert('Please log in to apply for jobs');
+        return;
+      }
+
+      if (appliedJobs.has(jobId)) {
+        alert('You have already applied to this job');
+        return;
+      }
+
+      const applicationData = {
+        jobId: jobId,
+        jobSeekerId: parseInt(userId),
+        status: 'Applied'
+      };
+
+      await api.post('/applications', applicationData, {
+        headers: { 
+          Authorization: token ? `${token}` : undefined,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      // Update the applied jobs set
+      setAppliedJobs(prev => new Set([...prev, jobId]));
+      alert('Application submitted successfully!');
+    } catch (err) {
+      console.error('Error applying to job:', err);
+      alert('Failed to submit application. Please try again.');
+    }
+  };
+
+  const handleFilterChange = (e) => {
+    setFilter({ ...filter, [e.target.name]: e.target.value });
+  };
+
+  const handleClear = () => {
+    setFilter({ title: '', location: '', company: '', jobType: '', modality: '', country: '', salary: '' });
+  };
+
+  const filteredJobs = jobs.filter(job => {
+    const employerUser = users.find(u => u.id === job.employerId);
+    return (
+      (!filter.title || job.title.toLowerCase().includes(filter.title.toLowerCase())) &&
+      (!filter.location || (job.location && job.location.toLowerCase().includes(filter.location.toLowerCase()))) &&
+      (!filter.company || (employerUser && employerUser.companyName && employerUser.companyName.toLowerCase().includes(filter.company.toLowerCase()))) &&
+      (!filter.jobType || (job.jobTime && job.jobTime === filter.jobType)) &&
+      (!filter.modality || (job.modality && job.modality === filter.modality)) &&
+      (!filter.country || (job.location && job.location.includes(filter.country))) &&
+      (!filter.salary || (job.salary && job.salary === filter.salary))
+    );
+  });
+
   return (
-    <Box className="jobs-container" sx={{ minHeight: '100vh', position: 'relative', background: 'linear-gradient(135deg,rgb(0, 0, 0) 0%,rgb(0, 0, 0) 100%)', overflowX: 'hidden', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+    <Box className="jobs-container" sx={{ minHeight: '100vh', position: 'relative', background: 'linear-gradient(135deg,rgb(252, 252, 252) 0%,rgb(252, 252, 252) 100%)', overflowX: 'hidden', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
       <style>{`
         body { overflow-x: hidden !important; }
         .bubble-loader {
@@ -86,58 +179,113 @@ const Jobs = () => {
           100% { transform: translateY(0); opacity: 0.7; }
         }
         .job-card-custom {
-          border-radius: 18px !important;
-          box-shadow: 0 4px 16px 0 rgba(31,38,135,0.10) !important;
+          border: 1px solid #d0d7de !important;
+          border-radius: 12px !important;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
           background: #fff !important;
           padding: 0 !important;
           position: relative;
-          overflow: visible;
-          min-height: 280px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
+          overflow: hidden;
+          min-height: 220px;
+          transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+          cursor: pointer;
+          margin-bottom: 8px;
+          font-family: 'Quicksand', sans-serif !important;
+          transform: translateY(0);
         }
-        .job-badge {
-          position: absolute;
-          top: 18px;
-          right: 18px;
-          background: #e6f7f2;
-          color: #00b894;
-          font-size: 0.95rem;
-          font-weight: 600;
-          border-radius: 16px;
-          padding: 4px 14px;
-          z-index: 2;
+        .job-card-custom:hover {
+          box-shadow: 0 8px 25px rgba(0,0,0,0.15), 0 4px 10px rgba(0,0,0,0.1) !important;
+          border-color: #9ca3af;
+          transform: translateY(-4px) scale(1.01);
+          background: #fafbfc !important;
         }
-        .job-daysleft {
-          position: absolute;
-          top: 18px;
-          left: 18px;
+        .job-card-header {
           display: flex;
-          align-items: center;
-          color: #888;
-          font-size: 0.97rem;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 16px;
+          padding: 16px 16px 0 16px;
+        }
+        .job-company-logo {
+          width: 40px;
+          height: 40px;
+          object-fit: contain;
+          border-radius: 2px;
+          background: #fff;
+          border: 1px solid #d0d7de;
+          padding: 2px;
+          flex-shrink: 0;
+        }
+        .job-apply-btn-header {
+          background: #0969da;
+          border: 1px solid #0969da;
+          color: white;
+          cursor: pointer;
+          padding: 6px 16px;
+          border-radius: 20px;
+          font-size: 14px;
           font-weight: 500;
-          background: #f7f7f7;
-          border-radius: 14px;
-          padding: 3px 10px 3px 8px;
-          z-index: 2;
-          gap: 4px;
+          font-family: 'Quicksand', sans-serif;
+          transition: all 0.2s ease;
+          text-transform: none;
         }
-        .job-apply-btn {
-          border-radius: 22px !important;
-          border: 1.5px solid #ff4d4f !important;
-          color: #ff4d4f !important;
+        .job-apply-btn-header:hover {
+          background: #0860ca;
+          border-color: #0860ca;
+        }
+        .job-apply-btn-header.applied {
+          background: #1a7f37;
+          border-color: #1a7f37;
+          color: white;
+        }
+        .job-apply-btn-header.applied:hover {
+          background: #116329;
+          border-color: #116329;
+        }
+        .job-title {
+          font-size: 16px !important;
           font-weight: 600 !important;
-          width: 80%;
-          margin: 0 auto 18px auto !important;
-          display: block !important;
-          background: #fff !important;
-          transition: background 0.2s;
+          color: #0969da !important;
+          margin: 0 0 4px 0 !important;
+          line-height: 1.3;
+          text-decoration: none;
+          cursor: pointer;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          font-family: 'Quicksand', sans-serif !important;
         }
-        .job-apply-btn:hover {
-          background: #fff0f0 !important;
-          border-color: #ff7875 !important;
+        .job-title:hover {
+          text-decoration: underline;
+        }
+        .job-company-name {
+          font-size: 14px !important;
+          color: #1f2328 !important;
+          font-weight: 500 !important;
+          margin: 0 0 4px 0 !important;
+          font-family: 'Quicksand', sans-serif !important;
+        }
+        .job-meta-info {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          color: #656c76;
+          font-size: 12px;
+          margin: 4px 0 12px 0;
+          flex-wrap: wrap;
+          font-family: 'Quicksand', sans-serif;
+        }
+        .job-meta-item {
+          display: flex;
+          align-items: center;
+          gap: 3px;
+        }
+        .job-posted-time {
+          color: #656c76;
+          font-size: 12px;
+          margin-top: 12px;
+          font-family: 'Quicksand', sans-serif;
         }
         .job-card-animate {
           opacity: 0;
@@ -162,19 +310,100 @@ const Jobs = () => {
       )}
       <Navbar onLogout={handleLogout} position="absolute" />
       <Box sx={{ height: '64px' }} /> {/* Spacer for AppBar */}
+      
+      {/* Filter Section */}
+      <Box sx={{ width: '100%', maxWidth: 1200, mx: 'auto', mt: 6, mb: 2, px: { xs: 2, md: 0 } }}>
+        <Typography variant="h3" sx={{ fontWeight: 700, fontFamily: 'Quicksand, sans-serif', mb: 3, color: '#333', lineHeight: 1.1 }}>
+          Find your dream job or let<br />companies find you
+        </Typography>
+        <Box sx={{ background: '#fff', borderRadius: 3, boxShadow: '0 2px 16px rgba(0,0,0,0.06)', p: { xs: 2, md: 3 }, mb: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, alignItems: 'center' }}>
+            <TextField
+              placeholder="Job title or keywords"
+              name="title"
+              value={filter.title}
+              onChange={handleFilterChange}
+              size="medium"
+              sx={{ flex: 2, bgcolor: '#f7f7f7', borderRadius: 2, fontFamily: 'Quicksand, sans-serif' }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: '#b0b0b0' }} />
+                  </InputAdornment>
+                ),
+                sx: { fontFamily: 'Quicksand, sans-serif' }
+              }}
+            />
+            <TextField
+              placeholder="Anywhere"
+              name="location"
+              value={filter.location}
+              onChange={handleFilterChange}
+              size="medium"
+              sx={{ flex: 1, bgcolor: '#f7f7f7', borderRadius: 2, fontFamily: 'Quicksand, sans-serif' }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LocationOnIcon sx={{ color: '#b0b0b0' }} />
+                  </InputAdornment>
+                ),
+                sx: { fontFamily: 'Quicksand, sans-serif' }
+              }}
+            />
+            <Button variant="contained" sx={{ bgcolor: '#ff6a22', color: '#fff', fontWeight: 700, px: 4, py: 1.5, borderRadius: 2, boxShadow: 'none', fontFamily: 'Quicksand, sans-serif', '&:hover': { bgcolor: '#ff6a22' } }}>
+              Search
+            </Button>
+          </Box>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2, alignItems: 'center' }}>
+            <FormControl size="small" sx={{ minWidth: 120, bgcolor: '#f7f7f7', borderRadius: 2 }}>
+              <InputLabel sx={{ fontFamily: 'Quicksand, sans-serif' }}>Job Type</InputLabel>
+              <Select label="Job Type" name="jobType" value={filter.jobType} onChange={handleFilterChange} sx={{ fontFamily: 'Quicksand, sans-serif' }}>
+                <MenuItem value=""><em>Any</em></MenuItem>
+                {jobTypes.map(type => <MenuItem key={type} value={type} sx={{ fontFamily: 'Quicksand, sans-serif' }}>{type}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <FormControl size="small" sx={{ minWidth: 120, bgcolor: '#f7f7f7', borderRadius: 2 }}>
+              <InputLabel sx={{ fontFamily: 'Quicksand, sans-serif' }}>Modality</InputLabel>
+              <Select label="Modality" name="modality" value={filter.modality} onChange={handleFilterChange} sx={{ fontFamily: 'Quicksand, sans-serif' }}>
+                <MenuItem value=""><em>Any</em></MenuItem>
+                {modalities.map(type => <MenuItem key={type} value={type} sx={{ fontFamily: 'Quicksand, sans-serif' }}>{type}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <FormControl size="small" sx={{ minWidth: 120, bgcolor: '#f7f7f7', borderRadius: 2 }}>
+              <InputLabel sx={{ fontFamily: 'Quicksand, sans-serif' }}>Country</InputLabel>
+              <Select label="Country" name="country" value={filter.country} onChange={handleFilterChange} sx={{ fontFamily: 'Quicksand, sans-serif' }}>
+                <MenuItem value=""><em>Any</em></MenuItem>
+                {countries.map(type => <MenuItem key={type} value={type} sx={{ fontFamily: 'Quicksand, sans-serif' }}>{type}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <FormControl size="small" sx={{ minWidth: 120, bgcolor: '#f7f7f7', borderRadius: 2 }}>
+              <InputLabel sx={{ fontFamily: 'Quicksand, sans-serif' }}>Salary</InputLabel>
+              <Select label="Salary" name="salary" value={filter.salary} onChange={handleFilterChange} sx={{ fontFamily: 'Quicksand, sans-serif' }}>
+                <MenuItem value=""><em>Any</em></MenuItem>
+                {salaries.map(type => <MenuItem key={type} value={type} sx={{ fontFamily: 'Quicksand, sans-serif' }}>{type}</MenuItem>)}
+              </Select>
+            </FormControl>
+            <Box sx={{ flex: 1 }} />
+            <Button onClick={handleClear} sx={{ color: '#ff6a22', fontWeight: 600, textTransform: 'none', ml: 'auto', fontFamily: 'Quicksand, sans-serif' }} endIcon={<ClearIcon fontSize="small" />}>Clear</Button>
+          </Box>
+        </Box>
+        <Typography sx={{ fontWeight: 700, fontSize: '1.5rem', color: '#333', fontFamily: 'Quicksand, sans-serif', mb: 2 }}>
+          {filteredJobs.length} total jobs
+        </Typography>
+      </Box>
       <Box sx={{
         width: '100%',
-        mt: 8,
-        px: { xs: 2, md: 8 },
+        maxWidth: 1200,
+        mx: 'auto',
+        mt: 2,
+        px: { xs: 2, md: 2 },
         display: 'flex',
-        flexWrap: 'wrap',
-        gap: 3,
-        justifyContent: 'center',
+        flexDirection: 'column',
+        gap: 2,
         boxSizing: 'border-box',
         overflowX: 'hidden',
-        maxWidth: '100vw',
       }}>
-        {!loading && jobs.length > 0 ? jobs.map((job, idx) => {
+        {!loading && filteredJobs.length > 0 ? filteredJobs.map((job, idx) => {
           // Calculate days left (if job.deadline exists)
           let daysLeft = null;
           if (job.deadline) {
@@ -191,36 +420,130 @@ const Jobs = () => {
               key={job.id}
               className="job-card-custom job-card-animate"
               sx={{
-                minWidth: 280,
-                maxWidth: 340,
-                flex: '1 1 300px',
+                width: '100%',
                 p: 0,
                 animationDelay: `${idx * 80}ms`,
               }}
               style={{ animationDelay: `${idx * 80}ms` }}
             >
-              {/* Days left */}
-              <span className="job-daysleft">
-                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" style={{marginRight:4}}><path d="M12 8v5l3 2" stroke="#888" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><circle cx="12" cy="12" r="9" stroke="#888" strokeWidth="1.7"/></svg>
-                {daysLeft !== null ? `${daysLeft} days left` : 'Open'}
-              </span>
-              {/* Job type badge */}
-              <span className="job-badge">{jobType}</span>
-              <CardContent sx={{ pt: 7, pb: 1, px: 2, textAlign: 'center', flex: 1 }}>
-                <Typography sx={{ color: '#888', fontWeight: 500, fontSize: '1.05rem', mt: 1, mb: 0.5, fontFamily: 'Quicksand, sans-serif' }}>{employerUser ? employerUser.companyName : 'Company Name'}</Typography>
-                <Typography variant="h6" sx={{ color: '#222', fontWeight: 700, fontFamily: 'Quicksand, sans-serif', fontSize: '1.18rem', mb: 0.5 }}>{job.title}</Typography>
-                <Typography sx={{ color: '#b0b0b0', fontSize: '1.01rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontFamily: 'Quicksand, sans-serif', mb: 1 }}>
-                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#b0b0b0"/></svg>
-                  {job.location || 'N/A'}
+              {/* Header with logo and actions */}
+              <Box className="job-card-header">
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, flex: 1 }}>
+                  <Box 
+                    className="job-company-logo"
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '16px',
+                      fontWeight: 'bold',
+                      color: '#656c76',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    {employerUser?.companyLogoUrl ? (
+                      <img 
+                        src={employerUser.companyLogoUrl} 
+                        alt={employerUser.companyName || 'Company'} 
+                        style={{ 
+                          width: '100%', 
+                          height: '100%', 
+                          objectFit: 'contain'
+                        }}
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <Box sx={{ 
+                      display: employerUser?.companyLogoUrl ? 'none' : 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '100%',
+                      height: '100%'
+                    }}>
+                      {(employerUser?.companyName || 'Company').charAt(0).toUpperCase()}
+                    </Box>
+                  </Box>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography className="job-title">
+                      {job.title}
+                    </Typography>
+                    <Typography className="job-company-name">
+                      {employerUser ? employerUser.companyName : 'Company Name'}
+                    </Typography>
+                    <Box className="job-meta-info">
+                      <Box className="job-meta-item">
+                        <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                        <span>{job.location || 'N/A'}</span>
+                      </Box>
+                      <span>•</span>
+                      <Box className="job-meta-item">
+                        <span>{job.jobTime || 'Full-time'}</span>
+                      </Box>
+                      {job.modality && (
+                        <>
+                          <span>•</span>
+                          <Box className="job-meta-item">
+                            <span>{job.modality}</span>
+                          </Box>
+                        </>
+                      )}
+                      {daysLeft !== null && (
+                        <>
+                          <span>•</span>
+                          <Box className="job-meta-item">
+                            <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 8v5l3 2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.7" fill="none"/>
+                            </svg>
+                            <span>{daysLeft} days left</span>
+                          </Box>
+                        </>
+                      )}
+                    </Box>
+                  </Box>
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                  <Button
+                    className={`job-apply-btn-header ${appliedJobs.has(job.id) ? 'applied' : ''}`}
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleApply(job.id);
+                    }}
+                    disabled={appliedJobs.has(job.id)}
+                  >
+                    {appliedJobs.has(job.id) ? 'Applied' : 'Apply'}
+                  </Button>
+                </Box>
+              </Box>
+              {job.description && (
+                <Typography sx={{ 
+                  color: '#656c76', 
+                  fontSize: '14px', 
+                  lineHeight: 1.4, 
+                  margin: '12px 0',
+                  padding: '0 16px',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  fontFamily: 'Quicksand, sans-serif'
+                }}>
+                  {job.description}
                 </Typography>
-              </CardContent>
-              <CardActions sx={{ justifyContent: 'center', pb: 1 }}>
-                <Button size="medium" variant="outlined" className="job-apply-btn">Apply Now</Button>
-              </CardActions>
+              )}
+              <Typography className="job-posted-time" sx={{ padding: '0 16px 16px 16px' }}>
+                Posted recently
+              </Typography>
             </Card>
           );
         }) : (!loading && (
-          <Typography sx={{ color: '#fff', fontFamily: 'Quicksand, sans-serif', mt: 4 }}>No jobs found.</Typography>
+          <Typography sx={{ color: '#333', fontFamily: 'Quicksand, sans-serif', mt: 4 }}>No jobs found.</Typography>
         ))}
       </Box>
     </Box>

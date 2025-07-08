@@ -15,4 +15,7 @@ public class JobSeekerDTO {
     private String role;
     private String password;
     private String profilePictureUrl;
+    private String about;
+    private String skills;
+    private String experience;
 }

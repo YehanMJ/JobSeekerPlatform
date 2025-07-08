@@ -15,4 +15,10 @@ public class EmployerDTO {
     private String role;
     private String password;
     private String profilePictureUrl;
+    private String companyLogoUrl;
+    private String location;
+    private String overview;
+    private String industry;
+    private String companySize;
+    private String website;
 }
