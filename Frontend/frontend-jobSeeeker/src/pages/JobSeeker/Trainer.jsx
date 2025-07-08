@@ -67,7 +67,7 @@ const Trainer = () => {
               <Box sx={{ flex: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                   <Link href={'#'} underline="hover" sx={{ fontWeight: 700, fontSize: '1.25rem', color: '#004080', mr: 1 }}>
-                    {trainer.fullName || trainer.username}
+                    {trainer.firstName && trainer.lastName ? `${trainer.firstName} ${trainer.lastName}` : trainer.username}
                   </Link>
                   <Typography sx={{ fontWeight: 500, color: '#222', mr: 1 }}>
                     US${trainer.rate || 20} / 15 mins

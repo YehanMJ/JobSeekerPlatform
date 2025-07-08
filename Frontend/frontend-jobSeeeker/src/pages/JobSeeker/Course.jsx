@@ -220,7 +220,9 @@ const Course = () => {
                   {/* Course type badge */}
                   <span className="course-badge">{course.category || 'Course'}</span>
                   <CardContent sx={{ pt: 7, pb: 1, px: 2, textAlign: 'center', flex: 1 }}>
-                    <Typography sx={{ color: '#888', fontWeight: 500, fontSize: '1.05rem', mt: 1, mb: 0.5, fontFamily: 'Quicksand, sans-serif' }}>{trainerUser ? trainerUser.fullName || trainerUser.username : 'Trainer Name'}</Typography>
+                    <Typography sx={{ color: '#888', fontWeight: 500, fontSize: '1.05rem', mt: 1, mb: 0.5, fontFamily: 'Quicksand, sans-serif' }}>
+                      {trainerUser ? (trainerUser.firstName && trainerUser.lastName ? `${trainerUser.firstName} ${trainerUser.lastName}` : trainerUser.username) : 'Trainer Name'}
+                    </Typography>
                     <Typography variant="h6" sx={{ color: '#222', fontWeight: 700, fontFamily: 'Quicksand, sans-serif', fontSize: '1.18rem', mb: 0.5 }}>{course.title}</Typography>
                     <Typography sx={{ color: '#b0b0b0', fontSize: '1.01rem', fontFamily: 'Quicksand, sans-serif', mb: 1 }}>
                       {course.description || 'Course description'}

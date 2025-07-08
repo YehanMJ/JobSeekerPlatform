@@ -216,7 +216,7 @@ const Candidates = () => {
                   <Box sx={{ flex: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', mb: 2, mt:1 }}>
                       <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.3rem', color: '#004080' }}>
-                        {candidate.fullName || candidate.username}
+                        {candidate.firstName && candidate.lastName ? `${candidate.firstName} ${candidate.lastName}` : candidate.username}
                       </Typography>
                       <Typography sx={{ fontWeight: 500, color: '#666', fontSize: '1rem' }}>
                         {candidate.email}

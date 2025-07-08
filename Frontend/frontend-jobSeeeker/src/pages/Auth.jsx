@@ -38,7 +38,14 @@ const panelStyle = {
 function Auth() {
   const [tab, setTab] = useState(0); // 0 = login, 1 = register
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
-  const [registerForm, setRegisterForm] = useState({ username: '', email: '', password: '', role: '' });
+  const [registerForm, setRegisterForm] = useState({ 
+    username: '', 
+    firstName: '', 
+    lastName: '', 
+    email: '', 
+    password: '', 
+    role: '' 
+  });
   const [message, setMessage] = useState('');
   const [resume, setResume] = useState(null);
   const [expertise, setExpertise] = useState('');
@@ -125,6 +132,8 @@ function Auth() {
         payload = new FormData();
         const jobSeekerObj = {
           username: registerForm.username,
+          firstName: registerForm.firstName,
+          lastName: registerForm.lastName,
           email: registerForm.email,
           password: registerForm.password,
           role: registerForm.role
@@ -141,6 +150,8 @@ function Auth() {
       } else if (registerForm.role === 'trainer') {
         payload = {
           username: registerForm.username,
+          firstName: registerForm.firstName,
+          lastName: registerForm.lastName,
           email: registerForm.email,
           password: registerForm.password,
           role: registerForm.role,
@@ -155,6 +166,8 @@ function Auth() {
         }
         payload = {
           username: registerForm.username,
+          firstName: registerForm.firstName,
+          lastName: registerForm.lastName,
           email: registerForm.email,
           password: registerForm.password,
           role: registerForm.role,
@@ -165,6 +178,8 @@ function Auth() {
       } else if (registerForm.role === 'admin') {
         payload = {
           username: registerForm.username,
+          firstName: registerForm.firstName,
+          lastName: registerForm.lastName,
           email: registerForm.email,
           password: registerForm.password,
           role: registerForm.role
@@ -335,6 +350,60 @@ function Auth() {
                   InputLabelProps={{ style: { color: '#bdbdbd' } }}
                   sx={{ mb: 2 }}
                 />
+                <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                  <TextField
+                    name="firstName"
+                    label="First Name"
+                    value={registerForm.firstName}
+                    onChange={handleRegisterChange}
+                    required
+                    fullWidth
+                    margin="normal"
+                    autoComplete="off"
+                    InputProps={{
+                      sx: {
+                        color: '#fff',
+                        background: 'rgba(10,10,10,0.85)',
+                        borderRadius: 1,
+                        '& input': {
+                          color: '#fff',
+                          background: 'rgba(10,10,10,0.85)',
+                          borderRadius: 1,
+                        },
+                        '& fieldset': {
+                          borderColor: 'rgba(80,80,80,0.7) !important',
+                        },
+                      }
+                    }}
+                    InputLabelProps={{ style: { color: '#bdbdbd' } }}
+                  />
+                  <TextField
+                    name="lastName"
+                    label="Last Name"
+                    value={registerForm.lastName}
+                    onChange={handleRegisterChange}
+                    required
+                    fullWidth
+                    margin="normal"
+                    autoComplete="off"
+                    InputProps={{
+                      sx: {
+                        color: '#fff',
+                        background: 'rgba(10,10,10,0.85)',
+                        borderRadius: 1,
+                        '& input': {
+                          color: '#fff',
+                          background: 'rgba(10,10,10,0.85)',
+                          borderRadius: 1,
+                        },
+                        '& fieldset': {
+                          borderColor: 'rgba(80,80,80,0.7) !important',
+                        },
+                      }
+                    }}
+                    InputLabelProps={{ style: { color: '#bdbdbd' } }}
+                  />
+                </Box>
                 <TextField
                   name="email"
                   label="Email"

@@ -61,12 +61,14 @@ public class TrainerController {
     @PutMapping("/{id}")
     public ResponseEntity<TrainerDTO> update(@PathVariable Integer id, @RequestBody TrainerDTO dto, @RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
         if (jwtTokenGenerator.verifyToken(authorizationHeader)) {
-            return trainerRepository.findById(id)
-                .map(trainer -> {
-                    modelMapper.map(dto, trainer);
-                    return ResponseEntity.ok(modelMapper.map(trainerRepository.save(trainer), TrainerDTO.class));
-                })
-                .orElseGet(() -> ResponseEntity.notFound().build());
+            try {
+                Trainer trainer = modelMapper.map(dto, Trainer.class);
+                Trainer updated = trainerService.updateTrainer(id, trainer);
+                TrainerDTO updatedDto = modelMapper.map(updated, TrainerDTO.class);
+                return ResponseEntity.ok(updatedDto);
+            } catch (RuntimeException e) {
+                return ResponseEntity.notFound().build();
+            }
         }
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }

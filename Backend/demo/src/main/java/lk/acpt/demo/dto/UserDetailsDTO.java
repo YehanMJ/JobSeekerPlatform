@@ -9,6 +9,8 @@ public class UserDetailsDTO {
     private String password;
     private String role;
     private String username;
+    private String firstName;
+    private String lastName;
     private String companyName;
     private String resumeUrl;
     private String expertise;
@@ -23,5 +25,9 @@ public class UserDetailsDTO {
     private String industry;
     private String companySize;
     private String website;
+    // Trainer specific fields
+    private String bio;
+    private String certifications;
+    private String achievements;
 }
 

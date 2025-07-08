@@ -112,7 +112,7 @@ const CandidateProfile = ({ candidate, onClose }) => {
               />
               <Box sx={{ flex: 1 }}>
                 <Typography variant="h4" sx={{ fontWeight: 700, color: '#000', fontFamily: 'Quicksand, sans-serif', mt: 5 }}>
-                  {candidate.fullName || candidate.username}
+                  {candidate.firstName && candidate.lastName ? `${candidate.firstName} ${candidate.lastName}` : candidate.username}
                 </Typography>
                 <Typography variant="h6" sx={{ color: '#666', fontWeight: 500, mb: 1 }}>
                   Job Seeker

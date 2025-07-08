@@ -136,6 +136,8 @@ const Profile = () => {
           payload.company = payload.companyName;
           delete payload.companyName;
         }
+      } else if (editUser.role === 'trainer') {
+        url = `/trainers/${editUser.id}`;
       } else {
         url = `/${editUser.role}s/${editUser.id}`;
       }
@@ -322,17 +324,9 @@ const Profile = () => {
               </Typography>
               {editingCard === 'basic' ? (
                 <TextField
-                  name="username"
-                  value={editUser?.username?.split(' ')[0] || ''}
-                  onChange={(e) => {
-                    const lastName = editUser?.username?.split(' ').slice(1).join(' ') || '';
-                    handleInputChange({
-                      target: {
-                        name: 'username',
-                        value: lastName ? `${e.target.value} ${lastName}` : e.target.value
-                      }
-                    });
-                  }}
+                  name="firstName"
+                  value={editUser?.firstName || ''}
+                  onChange={handleInputChange}
                   fullWidth
                   variant="outlined"
                   sx={{
@@ -344,7 +338,7 @@ const Profile = () => {
                 />
               ) : (
                 <Typography sx={{ color: '#555', fontSize: '1rem', p: 1.5, backgroundColor: '#f8f9fa', borderRadius: 2 }}>
-                  {user?.username?.split(' ')[0] || 'Not provided'}
+                  {user?.firstName || 'Not provided'}
                 </Typography>
               )}
             </Box>
@@ -354,17 +348,9 @@ const Profile = () => {
               </Typography>
               {editingCard === 'basic' ? (
                 <TextField
-                  name="lastname"
-                  value={editUser?.username?.split(' ').slice(1).join(' ') || ''}
-                  onChange={(e) => {
-                    const firstName = editUser?.username?.split(' ')[0] || '';
-                    handleInputChange({
-                      target: {
-                        name: 'username',
-                        value: `${firstName} ${e.target.value}`.trim()
-                      }
-                    });
-                  }}
+                  name="lastName"
+                  value={editUser?.lastName || ''}
+                  onChange={handleInputChange}
                   fullWidth
                   variant="outlined"
                   sx={{
@@ -376,10 +362,35 @@ const Profile = () => {
                 />
               ) : (
                 <Typography sx={{ color: '#555', fontSize: '1rem', p: 1.5, backgroundColor: '#f8f9fa', borderRadius: 2 }}>
-                  {user?.username?.split(' ').slice(1).join(' ') || 'Not provided'}
+                  {user?.lastName || 'Not provided'}
                 </Typography>
               )}
             </Box>
+          </Box>
+
+          <Box sx={{ mb: 3 }}>
+            <Typography sx={{ fontWeight: 600, color: '#2c3e50', mb: 1 }}>
+              Username
+            </Typography>
+            {editingCard === 'basic' ? (
+              <TextField
+                name="username"
+                value={editUser?.username || ''}
+                onChange={handleInputChange}
+                fullWidth
+                variant="outlined"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    backgroundColor: '#f8f9fa'
+                  }
+                }}
+              />
+            ) : (
+              <Typography sx={{ color: '#555', fontSize: '1rem', p: 1.5, backgroundColor: '#f8f9fa', borderRadius: 2 }}>
+                {user?.username || 'Not provided'}
+              </Typography>
+            )}
           </Box>
 
           <Box sx={{ mb: 3 }}>
@@ -957,16 +968,145 @@ const Profile = () => {
               <Typography variant="h6" sx={{ fontWeight: 600, color: '#2c3e50' }}>
                 Trainer Information
               </Typography>
+              {editingCard !== 'trainer' && (
+                <IconButton onClick={() => handleEditCard('trainer')} sx={{ color: '#007bff' }}>
+                  <EditIcon />
+                </IconButton>
+              )}
             </Box>
 
-            <Box sx={{ mb: 3 }}>
-              <Typography sx={{ fontWeight: 600, color: '#2c3e50', mb: 1 }}>
-                Expertise Area
-              </Typography>
-              <Typography sx={{ color: '#555', fontSize: '1rem', p: 1.5, backgroundColor: '#f8f9fa', borderRadius: 2 }}>
-                {user?.expertise || 'Expertise area not provided'}
-              </Typography>
-            </Box>
+            {editingCard === 'trainer' ? (
+              <>
+                <Box sx={{ mb: 3 }}>
+                  <TextField
+                    fullWidth
+                    label="Expertise Area"
+                    name="expertise"
+                    value={editUser?.expertise || ''}
+                    onChange={handleInputChange}
+                    variant="outlined"
+                    size="small"
+                  />
+                </Box>
+
+                <Box sx={{ mb: 3 }}>
+                  <TextField
+                    fullWidth
+                    label="Bio"
+                    name="bio"
+                    value={editUser?.bio || ''}
+                    onChange={handleInputChange}
+                    variant="outlined"
+                    multiline
+                    rows={4}
+                    placeholder="Tell us about yourself, your teaching philosophy, and background..."
+                  />
+                </Box>
+
+                <Box sx={{ mb: 3 }}>
+                  <TextField
+                    fullWidth
+                    label="Experience"
+                    name="experience"
+                    value={editUser?.experience || ''}
+                    onChange={handleInputChange}
+                    variant="outlined"
+                    multiline
+                    rows={4}
+                    placeholder="Describe your teaching and professional experience..."
+                  />
+                </Box>
+
+                <Box sx={{ mb: 3 }}>
+                  <TextField
+                    fullWidth
+                    label="Certifications"
+                    name="certifications"
+                    value={editUser?.certifications || ''}
+                    onChange={handleInputChange}
+                    variant="outlined"
+                    multiline
+                    rows={3}
+                    placeholder="List your relevant certifications, degrees, and qualifications..."
+                  />
+                </Box>
+
+                <Box sx={{ mb: 3 }}>
+                  <TextField
+                    fullWidth
+                    label="Achievements"
+                    name="achievements"
+                    value={editUser?.achievements || ''}
+                    onChange={handleInputChange}
+                    variant="outlined"
+                    multiline
+                    rows={3}
+                    placeholder="Share your notable achievements, awards, and recognitions..."
+                  />
+                </Box>
+
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                  <Button onClick={handleCancelEdit} variant="outlined" color="secondary">
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={() => handleSaveCard('trainer')} 
+                    variant="contained" 
+                    color="primary"
+                    disabled={saving}
+                  >
+                    {saving ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                </Box>
+              </>
+            ) : (
+              <>
+                <Box sx={{ mb: 3 }}>
+                  <Typography sx={{ fontWeight: 600, color: '#2c3e50', mb: 1 }}>
+                    Expertise Area
+                  </Typography>
+                  <Typography sx={{ color: '#555', fontSize: '1rem', p: 1.5, backgroundColor: '#f8f9fa', borderRadius: 2 }}>
+                    {user?.expertise || 'Expertise area not provided'}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ mb: 3 }}>
+                  <Typography sx={{ fontWeight: 600, color: '#2c3e50', mb: 1 }}>
+                    Bio
+                  </Typography>
+                  <Typography sx={{ color: '#555', fontSize: '1rem', p: 1.5, backgroundColor: '#f8f9fa', borderRadius: 2, whiteSpace: 'pre-wrap' }}>
+                    {user?.bio || 'Bio not provided'}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ mb: 3 }}>
+                  <Typography sx={{ fontWeight: 600, color: '#2c3e50', mb: 1 }}>
+                    Experience
+                  </Typography>
+                  <Typography sx={{ color: '#555', fontSize: '1rem', p: 1.5, backgroundColor: '#f8f9fa', borderRadius: 2, whiteSpace: 'pre-wrap' }}>
+                    {user?.experience || 'Experience not provided'}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ mb: 3 }}>
+                  <Typography sx={{ fontWeight: 600, color: '#2c3e50', mb: 1 }}>
+                    Certifications
+                  </Typography>
+                  <Typography sx={{ color: '#555', fontSize: '1rem', p: 1.5, backgroundColor: '#f8f9fa', borderRadius: 2, whiteSpace: 'pre-wrap' }}>
+                    {user?.certifications || 'Certifications not provided'}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ mb: 3 }}>
+                  <Typography sx={{ fontWeight: 600, color: '#2c3e50', mb: 1 }}>
+                    Achievements
+                  </Typography>
+                  <Typography sx={{ color: '#555', fontSize: '1rem', p: 1.5, backgroundColor: '#f8f9fa', borderRadius: 2, whiteSpace: 'pre-wrap' }}>
+                    {user?.achievements || 'Achievements not provided'}
+                  </Typography>
+                </Box>
+              </>
+            )}
           </Paper>
         )}
       </Box>

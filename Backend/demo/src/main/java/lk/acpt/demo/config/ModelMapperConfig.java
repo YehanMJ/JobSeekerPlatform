@@ -6,6 +6,7 @@ import lk.acpt.demo.dto.UserDetailsDTO;
 import lk.acpt.demo.entity.Application;
 import lk.acpt.demo.entity.Employer;
 import lk.acpt.demo.entity.JobSeeker;
+import lk.acpt.demo.entity.Trainer;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.context.annotation.Bean;
@@ -48,6 +49,8 @@ public class ModelMapperConfig {
         
         // Configure mapping between JobSeeker entity and UserDetailsDTO
         mapper.createTypeMap(JobSeeker.class, UserDetailsDTO.class)
+                .addMapping(JobSeeker::getFirstName, UserDetailsDTO::setFirstName)
+                .addMapping(JobSeeker::getLastName, UserDetailsDTO::setLastName)
                 .addMapping(JobSeeker::getResumeUrl, UserDetailsDTO::setResumeUrl)
                 .addMapping(JobSeeker::getProfilePictureUrl, UserDetailsDTO::setProfilePictureUrl)
                 .addMapping(JobSeeker::getAbout, UserDetailsDTO::setAbout)
@@ -56,6 +59,8 @@ public class ModelMapperConfig {
         
         // Configure mapping between Employer entity and UserDetailsDTO
         mapper.createTypeMap(Employer.class, UserDetailsDTO.class)
+                .addMapping(Employer::getFirstName, UserDetailsDTO::setFirstName)
+                .addMapping(Employer::getLastName, UserDetailsDTO::setLastName)
                 .addMapping(Employer::getCompanyName, UserDetailsDTO::setCompanyName)
                 .addMapping(Employer::getProfilePictureUrl, UserDetailsDTO::setProfilePictureUrl)
                 .addMapping(Employer::getCompanyLogoUrl, UserDetailsDTO::setCompanyLogoUrl)
@@ -64,6 +69,17 @@ public class ModelMapperConfig {
                 .addMapping(Employer::getIndustry, UserDetailsDTO::setIndustry)
                 .addMapping(Employer::getCompanySize, UserDetailsDTO::setCompanySize)
                 .addMapping(Employer::getWebsite, UserDetailsDTO::setWebsite);
+        
+        // Configure mapping between Trainer entity and UserDetailsDTO
+        mapper.createTypeMap(Trainer.class, UserDetailsDTO.class)
+                .addMapping(Trainer::getFirstName, UserDetailsDTO::setFirstName)
+                .addMapping(Trainer::getLastName, UserDetailsDTO::setLastName)
+                .addMapping(Trainer::getExpertise, UserDetailsDTO::setExpertise)
+                .addMapping(Trainer::getProfilePictureUrl, UserDetailsDTO::setProfilePictureUrl)
+                .addMapping(Trainer::getBio, UserDetailsDTO::setBio)
+                .addMapping(Trainer::getExperience, UserDetailsDTO::setExperience)
+                .addMapping(Trainer::getCertifications, UserDetailsDTO::setCertifications)
+                .addMapping(Trainer::getAchievements, UserDetailsDTO::setAchievements);
         
         return mapper;
     }

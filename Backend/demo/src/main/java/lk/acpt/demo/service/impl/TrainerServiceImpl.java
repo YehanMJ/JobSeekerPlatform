@@ -35,7 +35,21 @@ public class TrainerServiceImpl implements TrainerService {
     public Trainer updateTrainer(Integer id, Trainer trainer) {
         Trainer existing = getTrainerById(id);
         existing.setExpertise(trainer.getExpertise());
-        // set other fields as needed
+        
+        // Update new trainer profile fields
+        if (trainer.getBio() != null) {
+            existing.setBio(trainer.getBio());
+        }
+        if (trainer.getExperience() != null) {
+            existing.setExperience(trainer.getExperience());
+        }
+        if (trainer.getCertifications() != null) {
+            existing.setCertifications(trainer.getCertifications());
+        }
+        if (trainer.getAchievements() != null) {
+            existing.setAchievements(trainer.getAchievements());
+        }
+        
         return trainerRepository.save(existing);
     }
 

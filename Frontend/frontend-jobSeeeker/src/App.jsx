@@ -7,7 +7,6 @@ import Admin from './pages/Admin';
 import Auth from './pages/Auth';
 import Home from './pages/JobSeeker/Home';
 import ProfilePage from './pages/ProfilePage';
-import Filter from './pages/JobSeeker/Filter';
 import Course from './pages/JobSeeker/Course';
 import EmployerHome from './pages/Employer/Home';
 import PostJobs from './pages/Employer/PostJobs';
@@ -75,7 +74,6 @@ function App() {
         <Route path="/register" element={<Auth />} />
         <Route path="/login" element={<Auth />} />
         <Route path="/profile/edit" element={<ProfilePage />} />
-        <Route path="/filter" element={<Filter />} />
         <Route path="/course" element={<Course />} />
         {/* <Route path="/" element={<div>Welcome! Please select a role above.</div>} /> */}
       </Routes>

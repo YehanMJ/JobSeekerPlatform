@@ -83,7 +83,7 @@ const TrainerHome = () => {
         {/* Welcome Section */}
         <Paper elevation={3} sx={{ p: 4, mb: 4, borderRadius: 3 }}>
           <Typography variant="h4" sx={{ fontWeight: 700, mb: 2, color: '#1e3c72' }}>
-            Welcome back, {trainer?.username}!
+            Welcome back, {trainer?.firstName && trainer?.lastName ? `${trainer.firstName} ${trainer.lastName}` : trainer?.username}!
           </Typography>
           <Typography variant="h6" sx={{ color: '#555', mb: 1 }}>
             Trainer Dashboard
