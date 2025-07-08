@@ -9,6 +9,12 @@ import Home from './pages/JobSeeker/Home';
 import ProfilePage from './pages/ProfilePage';
 import Filter from './pages/JobSeeker/Filter';
 import Course from './pages/JobSeeker/Course';
+import EmployerHome from './pages/Employer/Home';
+import PostJobs from './pages/Employer/PostJobs';
+import Candidates from './pages/Employer/Candidates';
+import TrainerHome from './pages/Trainer/Home';
+import UploadCourses from './pages/Trainer/UploadCourses';
+import Trainees from './pages/Trainer/Trainees';
 import './App.css';
 
 function App() {
@@ -17,11 +23,20 @@ function App() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    const userRole = sessionStorage.getItem('role');
+    
     if (!token && location.pathname !== '/login' && location.pathname !== '/register') {
       navigate('/login');
     }
     if (token && (location.pathname === '/login' || location.pathname === '/register')) {
-      navigate('/home');
+      // Redirect based on user role
+      if (userRole === 'employer') {
+        navigate('/employer/home');
+      } else if (userRole === 'trainer') {
+        navigate('/trainer/home');
+      } else {
+        navigate('/home');
+      }
     }
   }, [location, navigate]);
 
@@ -49,7 +64,13 @@ function App() {
         <Route path="/home" element={<Home />} />
         <Route path="/jobseeker" element={<JobSeeker />} />
         <Route path="/employer" element={<Employer />} />
+        <Route path="/employer/home" element={<EmployerHome />} />
+        <Route path="/employer/post-jobs" element={<PostJobs />} />
+        <Route path="/employer/candidates" element={<Candidates />} />
         <Route path="/trainer" element={<Trainer />} />
+        <Route path="/trainer/home" element={<TrainerHome />} />
+        <Route path="/trainer/upload-courses" element={<UploadCourses />} />
+        <Route path="/trainer/trainees" element={<Trainees />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/register" element={<Auth />} />
         <Route path="/login" element={<Auth />} />

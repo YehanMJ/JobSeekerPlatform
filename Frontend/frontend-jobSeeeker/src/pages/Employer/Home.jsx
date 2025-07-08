@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Box, Button, Typography, Card, CardContent, CardActions, CircularProgress, Snackbar, Alert } from '@mui/material';
+import { Box, Button, Typography, Card, CardContent, CardActions, CircularProgress } from '@mui/material';
 import pp1 from '../../assets/pp1.jpeg';
 import pp2 from '../../assets/pp2.jpg';
 import pp3 from '../../assets/pp3.jpg';
@@ -14,16 +14,13 @@ import Navbar from '../../components/Navbar';
 
 const images = [pp6, pp2, pp3];
 
-const Home = () => {
+const EmployerHome = () => {
   const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
   const [jobs, setJobs] = useState([]);
-  const [employers, setEmployers] = useState([]);
+  const [candidates, setCandidates] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [applyingJobId, setApplyingJobId] = useState(null);
-  const [appliedJobs, setAppliedJobs] = useState(new Set());
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -33,65 +30,45 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    const fetchJobs = async () => {
+    const fetchMyJobs = async () => {
       try {
         const token = localStorage.getItem('token');
+        const employerId = sessionStorage.getItem('id');
         const res = await api.get('/jobs', {
           headers: { Authorization: token ? `${token}` : undefined }
         });
         if (Array.isArray(res.data)) {
-          // Sort by id descending, take last 20
-          const sorted = [...res.data].sort((a, b) => b.id - a.id).slice(0, 20);
+          // Filter jobs posted by this employer
+          const myJobs = res.data.filter(job => job.employerId == employerId);
+          const sorted = [...myJobs].sort((a, b) => b.id - a.id).slice(0, 20);
           setJobs(sorted);
         }
       } catch (err) {
         setJobs([]);
       }
     };
-    fetchJobs();
+    fetchMyJobs();
   }, []);
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchCandidates = async () => {
       try {
         const token = localStorage.getItem('token');
         const res = await api.get('/user/all', {
           headers: { Authorization: token ? `${token}` : undefined }
         });
         if (Array.isArray(res.data)) {
-            console.log(res.data);
+          // Filter only job seekers
+          const jobSeekers = res.data.filter(user => user.role === 'jobseeker');
+          setCandidates(jobSeekers.slice(0, 10)); // Show top 10 candidates
           setUsers(res.data);
         }
       } catch (err) {
+        setCandidates([]);
         setUsers([]);
       }
     };
-    fetchUsers();
-  }, []);
-
-  useEffect(() => {
-    const fetchApplications = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const userId = sessionStorage.getItem('id');
-        
-        if (!userId) return;
-
-        const res = await api.get('/applications', {
-          headers: { Authorization: token ? `${token}` : undefined }
-        });
-        
-        if (Array.isArray(res.data)) {
-          // Filter applications by current user and create a set of applied job IDs
-          const userApplications = res.data.filter(app => app.jobSeekerId === parseInt(userId));
-          const appliedJobIds = new Set(userApplications.map(app => app.jobId));
-          setAppliedJobs(appliedJobIds);
-        }
-      } catch (err) {
-        console.error('Error fetching applications:', err);
-      }
-    };
-    fetchApplications();
+    fetchCandidates();
   }, []);
 
   useEffect(() => {
@@ -104,99 +81,6 @@ const Home = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/login');
-  };
-
-  const handleApplyJob = async (jobId) => {
-    try {
-      // Check if already applied
-      if (appliedJobs.has(jobId)) {
-        setSnackbar({
-          open: true,
-          message: 'You have already applied for this job',
-          severity: 'warning'
-        });
-        return;
-      }
-
-      setApplyingJobId(jobId);
-      const token = localStorage.getItem('token');
-      const userId = sessionStorage.getItem('id');
-      
-      if (!userId) {
-        setSnackbar({
-          open: true,
-          message: 'Please log in to apply for jobs',
-          severity: 'error'
-        });
-        return;
-      }
-
-      // Check if user is a jobseeker
-      const userRes = await api.get('/user/userauth', {
-        headers: { Authorization: token ? `${token}` : undefined },
-        params: { id: userId }
-      });
-
-      if (userRes.data.role !== 'jobseeker') {
-        setSnackbar({
-          open: true,
-          message: 'Only job seekers can apply for jobs',
-          severity: 'error'
-        });
-        return;
-      }
-
-      // Create application
-      const applicationData = {
-        jobId: jobId,
-        jobSeekerId: parseInt(userId),
-        status: 'Pending'
-      };
-
-      const response = await api.post('/applications', applicationData, {
-        headers: { Authorization: token ? `${token}` : undefined }
-      });
-
-      if (response.status === 201) {
-        // Add job to applied jobs set
-        setAppliedJobs(prev => new Set([...prev, jobId]));
-        
-        setSnackbar({
-          open: true,
-          message: 'Application submitted successfully!',
-          severity: 'success'
-        });
-      }
-    } catch (error) {
-      console.error('Error applying for job:', error);
-      
-      // Handle specific error cases
-      if (error.response?.status === 401) {
-        setSnackbar({
-          open: true,
-          message: 'Please log in to apply for jobs',
-          severity: 'error'
-        });
-      } else if (error.response?.status === 409) {
-        setSnackbar({
-          open: true,
-          message: 'You have already applied for this job',
-          severity: 'warning'
-        });
-      } else {
-        setSnackbar({
-          open: true,
-          message: 'Failed to submit application. Please try again.',
-          severity: 'error'
-        });
-      }
-    } finally {
-      setApplyingJobId(null);
-    }
-  };
-
-  const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
   };
 
   return (
@@ -283,13 +167,13 @@ const Home = () => {
             fontFamily: 'Quicksand, sans-serif',
           }}>
             <Typography variant="h4" sx={{ color: '#fff', mb: 2, fontWeight: 700, fontFamily: 'Quicksand, sans-serif', fontSize: '3rem' }}>
-              Welcome to the Job Seeker Platform!
+              Welcome to the Employer Dashboard!
             </Typography>
             <Typography sx={{ color: '#ffffff !important', fontSize: '2.1rem !important', fontFamily: 'Quicksand, sans-serif' }}>
-              Your future career starts here.
+              Find the perfect candidates for your company.
             </Typography>
           </Box>
-          {/* Recent Jobs Section */}
+          {/* My Posted Jobs Section */}
           <Box sx={{
             width: '100%',
             mt: 6,
@@ -302,6 +186,9 @@ const Home = () => {
             overflowX: 'hidden',
             maxWidth: '100vw',
           }}>
+            <Typography variant="h5" sx={{ width: '100%', textAlign: 'center', color: '#fff', fontFamily: 'Quicksand, sans-serif', fontWeight: 700, mb: 3 }}>
+              My Posted Jobs
+            </Typography>
             <style>{`
               .job-card-custom {
                 border-radius: 18px !important;
@@ -342,17 +229,7 @@ const Home = () => {
                 z-index: 2;
                 gap: 4px;
               }
-              .job-company-logo {
-                width: 60px;
-                height: 60px;
-                object-fit: contain;
-                margin: 0 auto 10px auto;
-                display: block;
-                border-radius: 8px;
-                background: #f5f5f5;
-                border: 1px solid #eee;
-              }
-              .job-apply-btn {
+              .job-manage-btn {
                 border-radius: 22px !important;
                 border: 1.5px solid #ff4d4f !important;
                 color: #ff4d4f !important;
@@ -363,7 +240,7 @@ const Home = () => {
                 background: #fff !important;
                 transition: background 0.2s;
               }
-              .job-apply-btn:hover {
+              .job-manage-btn:hover {
                 background: #fff0f0 !important;
                 border-color: #ff7875 !important;
               }
@@ -401,8 +278,7 @@ const Home = () => {
                   {/* Job type badge */}
                   <span className="job-badge">{jobType}</span>
                   <CardContent sx={{ pt: 7, pb: 1, px: 2, textAlign: 'center', flex: 1 }}>
-                    {/* Removed logo image here */}
-                    <Typography sx={{ color: '#888', fontWeight: 500, fontSize: '1.05rem', mt: 1, mb: 0.5, fontFamily: 'Quicksand, sans-serif' }}>{employerUser ? employerUser.companyName : 'Company Name'}</Typography>
+                    <Typography sx={{ color: '#888', fontWeight: 500, fontSize: '1.05rem', mt: 1, mb: 0.5, fontFamily: 'Quicksand, sans-serif' }}>{employerUser ? employerUser.companyName : 'My Company'}</Typography>
                     <Typography variant="h6" sx={{ color: '#222', fontWeight: 700, fontFamily: 'Quicksand, sans-serif', fontSize: '1.18rem', mb: 0.5 }}>{job.title}</Typography>
                     <Typography sx={{ color: '#b0b0b0', fontSize: '1.01rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontFamily: 'Quicksand, sans-serif', mb: 1 }}>
                       <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#b0b0b0"/></svg>
@@ -410,62 +286,18 @@ const Home = () => {
                     </Typography>
                   </CardContent>
                   <CardActions sx={{ justifyContent: 'center', pb: 1 }}>
-                    <Button 
-                      size="medium" 
-                      variant={appliedJobs.has(job.id) ? "contained" : "outlined"}
-                      className="job-apply-btn"
-                      onClick={() => handleApplyJob(job.id)}
-                      disabled={applyingJobId === job.id || appliedJobs.has(job.id)}
-                      sx={{
-                        ...(appliedJobs.has(job.id) && {
-                          backgroundColor: '#4caf50 !important',
-                          borderColor: '#4caf50 !important',
-                          color: '#fff !important',
-                          '&:hover': {
-                            backgroundColor: '#45a049 !important',
-                            borderColor: '#45a049 !important',
-                          }
-                        })
-                      }}
-                    >
-                      {applyingJobId === job.id ? (
-                        <>
-                          <CircularProgress size={16} sx={{ mr: 1 }} />
-                          Applying...
-                        </>
-                      ) : appliedJobs.has(job.id) ? (
-                        'Applied ✓'
-                      ) : (
-                        'Apply Now'
-                      )}
-                    </Button>
+                    <Button size="medium" variant="outlined" className="job-manage-btn">Manage</Button>
                   </CardActions>
                 </Card>
               );
             }) : (
-              <Typography sx={{ color: '#fff', fontFamily: 'Quicksand, sans-serif', mt: 4 }}>No recent jobs found.</Typography>
+              <Typography sx={{ color: '#fff', fontFamily: 'Quicksand, sans-serif', mt: 4 }}>No jobs posted yet. Post your first job!</Typography>
             )}
           </Box>
         </>
       )}
-      
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert 
-          onClose={handleCloseSnackbar} 
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };
 
-export default Home;
+export default EmployerHome;

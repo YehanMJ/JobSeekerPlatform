@@ -24,13 +24,14 @@ const roleSpecificFields = {
       InputProps={{ readOnly: true }}
     />
   ),
-  employer: user => (
+  employer: (user, editUser, handleInputChange) => (
     <TextField
       label="Company Name"
-      value={user.companyName || ''}
+      name="companyName"
+      value={editUser?.companyName || ''}
+      onChange={handleInputChange}
       fullWidth
       margin="normal"
-      InputProps={{ readOnly: true }}
     />
   ),
 };
@@ -94,6 +95,7 @@ const Profile = () => {
       });
       // Update user profile pic in UI
       setUser(prev => ({ ...prev, profilePictureUrl: res.data.profilePictureUrl }));
+      setEditUser(prev => ({ ...prev, profilePictureUrl: res.data.profilePictureUrl }));
     } catch (err) {
       console.error('Profile picture upload error:', err);
     } finally {
@@ -112,19 +114,49 @@ const Profile = () => {
     try {
       const token = localStorage.getItem('token');
       let url;
+      let payload = { ...editUser };
+      
+      // Ensure profilePictureUrl is preserved in the payload
+      if (user.profilePictureUrl) {
+        payload.profilePictureUrl = user.profilePictureUrl;
+      }
+      
       if (editUser.role === 'jobseeker') {
         url = `/job-seekers/${editUser.id}`;
+      } else if (editUser.role === 'employer') {
+        url = `/employers/${editUser.id}`;
+        // The employer endpoint expects 'company' field, not 'companyName'
+        if (payload.companyName) {
+          payload.company = payload.companyName;
+          delete payload.companyName;
+        }
       } else {
         url = `/${editUser.role}s/${editUser.id}`;
       }
-      const res = await api.put(url, editUser, {
+      
+      const res = await api.put(url, payload, {
         headers: { Authorization: token ? `${token}` : undefined }
       });
+      
+      // The backend should now return the correct EmployerDTO with 'company' field
+      // We need to map it back to 'companyName' for consistency with UserDetailsDTO
+      let updatedUser = { ...res.data };
+      
+      // For employers, ensure we have companyName for UI consistency
+      if (editUser.role === 'employer' && updatedUser.company) {
+        updatedUser.companyName = updatedUser.company;
+      }
+      
       // Preserve the resumeUrl if it exists in the current user state
-      const updatedUser = { ...res.data };
       if (user.resumeUrl && !updatedUser.resumeUrl) {
         updatedUser.resumeUrl = user.resumeUrl;
       }
+      
+      // Always preserve the profilePictureUrl from the current user state
+      if (user.profilePictureUrl) {
+        updatedUser.profilePictureUrl = user.profilePictureUrl;
+      }
+      
       setUser(updatedUser);
       setEditUser(updatedUser);
     } catch (err) {
@@ -180,7 +212,7 @@ const Profile = () => {
           >
             Change Photo
           </Button>
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>{user.fullName || user.username}</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 700 }}>{user.username}</Typography>
           <Typography color="text.secondary" sx={{ mb: 1 }}>{user.role && user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Typography>
         </Box>
         <TextField
@@ -193,8 +225,8 @@ const Profile = () => {
         />
         <TextField
           label="Name"
-          name="fullName"
-          value={editUser?.fullName || editUser?.username || ''}
+          name="username"
+          value={editUser?.username || ''}
           onChange={handleInputChange}
           fullWidth
           margin="normal"
@@ -236,7 +268,11 @@ const Profile = () => {
             />
           </Button>
         )}
-        {user.role && roleSpecificFields[user.role] && roleSpecificFields[user.role](user)}
+        {user.role && roleSpecificFields[user.role] && (
+          user.role === 'employer' 
+            ? roleSpecificFields[user.role](user, editUser, handleInputChange)
+            : roleSpecificFields[user.role](user)
+        )}
         <Button variant="contained" color="primary" sx={{ mt: 3, width: '100%' }} onClick={handleSave} disabled={saving}>
           {saving ? 'Saving...' : 'Save Changes'}
         </Button>

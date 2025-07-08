@@ -32,7 +32,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     public Application updateApplication(Integer id, Application application) {
         Application existing = getApplicationById(id);
         existing.setJobSeeker(application.getJobSeeker());
-        existing.setJobOffer(application.getJobOffer());
+        existing.setJob(application.getJob());
         existing.setStatus(application.getStatus());
         return applicationRepository.save(existing);
     }

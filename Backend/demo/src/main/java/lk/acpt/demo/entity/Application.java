@@ -21,6 +21,6 @@ public class Application {
     @ManyToOne
     private JobSeeker jobSeeker;
     @ManyToOne
-    private JobOffer jobOffer;
+    private Job job;
     private String status;
 }

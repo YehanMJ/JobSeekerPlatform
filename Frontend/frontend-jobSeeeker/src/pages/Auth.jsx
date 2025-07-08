@@ -77,7 +77,14 @@ function Auth() {
         sessionStorage.setItem('id', res.data.id || '');
         sessionStorage.setItem('role', res.data.role || '');
         setMessage('Login successful!');
-        navigate('/home'); // Redirect to home after login
+        // Redirect based on role
+        if (res.data.role === 'employer') {
+          navigate('/employer/home');
+        } else if(res.data.role === 'trainer') {
+          navigate('/trainer/home');
+        } else {
+          navigate('/home');
+        }
       } else {
         setMessage('Login failed: No token received.');
       }
@@ -151,7 +158,7 @@ function Auth() {
           email: registerForm.email,
           password: registerForm.password,
           role: registerForm.role,
-          companyName: companyName
+          company: companyName  // Changed from companyName to company
         };
         config = { headers: { 'Content-Type': 'application/json' } };
         await api.post(endpoint, payload, config);
