@@ -1,0 +1,77 @@
+*{
+  margin: 0;
+}
+
+/* Home page and navbar styles */
+.home-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #000000 0%, #000000 100%);
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(30,60,114,0.08);
+}
+
+.navbar-logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.navbar-links a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.navbar-links a:hover {
+  color: #ffd700;
+}
+
+.logout-btn {
+  background: #ff4b2b;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.logout-btn:hover {
+  background: #ff1c00;
+}
+
+.home-content {
+  margin: 3rem auto;
+  /* max-width: 600px; */
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(30,60,114,0.08);
+  padding: 2.5rem 2rem;
+  text-align: center;
+}
+
+.home-content h1 {
+  color: #1e3c72;
+  margin-bottom: 1rem;
+}
+
+.home-content p {
+  color: #333;
+  font-size: 1.1rem;
+}
