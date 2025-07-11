@@ -6,7 +6,72 @@ import { Box, Paper, Typography, Tabs, Tab, TextField, Button, Checkbox, FormCon
 import GoogleIcon from '@mui/icons-material/Google';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import Globe from 'react-globe.gl';
-import p3 from '../assets/p3.jpg';
+import mapBg from '../assets/p4.PNG';
+import LoadingScreen from '../components/LoadingScreen';
+
+// Component for animated circular waves
+const CircularWave = ({ x, y, delay, onComplete }) => {
+  const [scale, setScale] = useState(0);
+  const [opacity, setOpacity] = useState(0.8);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const interval = setInterval(() => {
+        setScale(prev => {
+          if (prev >= 3) {
+            // Reset animation and trigger new random position
+            setOpacity(0.8);
+            onComplete();
+            return 0;
+          }
+          return prev + 0.03;
+        });
+        setOpacity(prev => {
+          if (scale >= 2.5) {
+            return Math.max(0, prev - 0.02);
+          }
+          return Math.max(0, 0.8 - scale * 0.3);
+        });
+      }, 50);
+      return () => clearInterval(interval);
+    }, delay);
+    
+    return () => clearTimeout(timer);
+  }, [scale, delay, onComplete]);
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: `${x}%`,
+        top: `${y}%`,
+        width: '80px',
+        height: '80px',
+        border: '2px solid rgba(79, 195, 247, 0.6)',
+        borderRadius: '50%',
+        transform: `translate(-50%, -50%) scale(${scale})`,
+        opacity: opacity,
+        pointerEvents: 'none',
+        transition: 'all 0.05s ease-out',
+        zIndex: 1,
+      }}
+    />
+  );
+};
+
+// Generate random wave positions
+const generateWaves = () => {
+  const waves = [];
+  for (let i = 0; i < 12; i++) {
+    waves.push({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      delay: Math.random() * 20000 + 5000, // 5-25 seconds delay
+    });
+  }
+  return waves;
+};
 
 const bgStyle = {
   fontFamily: 'Inconsolata, monospace',
@@ -18,21 +83,40 @@ const bgStyle = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'flex-end',
+  backgroundImage: `url(${mapBg})`,
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+  backgroundRepeat: 'no-repeat',
+  position: 'relative',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'transparent',
+    zIndex: 0,
+  }
 };
 
 const panelStyle = {
   fontFamily: 'Inconsolata, monospace',
-  background: 'rgba(20, 20, 20, 0.7)',
+  background: 'rgba(255, 255, 255, 0)',
   borderRadius: 20,
   padding: '2rem 2.5rem',
   margin: '2rem 4rem',
   maxWidth: 400,
   width: '100%',
-  color: '#fff',
-  boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+  color: '#333',
+  boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.1)',
   display: 'flex',
   flexDirection: 'column',
   gap: '1.2rem',
+  zIndex: 10,
+  position: 'relative',
+  backdropFilter: 'blur(10px)',
+  border: '1px solid rgba(255, 255, 255, 0.2)',
 };
 
 function Auth() {
@@ -50,8 +134,38 @@ function Auth() {
   const [resume, setResume] = useState(null);
   const [expertise, setExpertise] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [currentWave, setCurrentWave] = useState(null);
+  const [isWaveActive, setIsWaveActive] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const globeRef = useRef();
+
+  // Generate a single wave
+  const generateNewWave = () => {
+    return {
+      id: Date.now(),
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      delay: Math.random() * 2000 + 1000, // 1-3 seconds delay
+    };
+  };
+
+  // Initialize first wave
+  useEffect(() => {
+    if (!isWaveActive) {
+      setCurrentWave(generateNewWave());
+      setIsWaveActive(true);
+    }
+  }, [isWaveActive]);
+
+  // Function to regenerate a new wave after current one completes
+  const regenerateWave = () => {
+    setIsWaveActive(false);
+    setTimeout(() => {
+      setCurrentWave(generateNewWave());
+      setIsWaveActive(true);
+    }, Math.random() * 3000 + 2000); // 2-5 seconds delay between waves
+  };
 
   useEffect(() => {
     let animationFrameId;
@@ -195,7 +309,31 @@ function Auth() {
   };
 
   return (
-    <Box sx={{ ...bgStyle, background: '#0d0d1a', fontFamily: 'Inconsolata, monospace', position: 'relative', overflow: 'hidden' }}>
+    <Box sx={{ ...bgStyle, position: 'relative', overflow: 'hidden' }}>
+      {/* Light overlay for map background */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(240, 248, 255, 0.85)',
+          zIndex: 0,
+        }}
+      />
+      
+      {/* Animated circular waves - Only one at a time */}
+      {isWaveActive && currentWave && (
+        <CircularWave
+          key={currentWave.id}
+          x={currentWave.x}
+          y={currentWave.y}
+          delay={currentWave.delay}
+          onComplete={regenerateWave}
+        />
+      )}
+      
       {/* Title at top left */}
       <Typography
         variant="h3"
@@ -204,7 +342,7 @@ function Auth() {
           top: 24,
           left: 32,
           zIndex: 2,
-          color: '#4fc3f7',
+          color: '#2196f3',
           fontWeight: 700,
           letterSpacing: 2,
           textShadow: '0 2px 16px #0d0d1a, 0 1px 1px #222',
@@ -213,25 +351,16 @@ function Auth() {
       >
         Job Seekers
       </Typography>
-      <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 0 }}>
-        <Globe
-          ref={globeRef}
-          globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
-          backgroundColor="#0d0d1a"
-          animateIn={true}
-          backgroundImageUrl={p3}
-          style={{ width: '100%', height: '100%' }}
-        />
-      </Box>
+      
       <Box sx={{ position: 'relative', zIndex: 1, minHeight: '100vh', width: '100vw', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
         <Paper elevation={8} sx={panelStyle}>
           <Tabs value={tab} onChange={(_, v) => setTab(v)} textColor="primary" indicatorColor="primary">
-            <Tab label="Sign in" sx={{ color: '#4fc3f7', fontWeight: 600 }} />
-            <Tab label="Sign up" sx={{ color: '#4fc3f7', fontWeight: 600 }} />
+            <Tab label="Sign in" sx={{ color: '#333', fontWeight: 600 }} />
+            <Tab label="Sign up" sx={{ color: '#333', fontWeight: 600 }} />
           </Tabs>
           {tab === 0 ? (
             <>
-              <Typography variant="h6" sx={{ color: '#fff', mb: 1 }}>
+              <Typography variant="h6" sx={{ color: '#333', mb: 1 }}>
                 Welcome back! Please login to your account
               </Typography>
               <form onSubmit={handleLoginSubmit} autoComplete="off">
@@ -246,20 +375,24 @@ function Auth() {
                   autoComplete="off"
                   InputProps={{
                     sx: {
-                      color: '#fff',
-                      background: 'rgba(10,10,10,0.85)',
+                      color: '#333',
+                      background: 'rgba(255, 255, 255, 0.8)',
                       borderRadius: 1,
                       '& input': {
-                        color: '#fff',
-                        background: 'rgba(10,10,10,0.85)',
-                        borderRadius: 1,
+                        color: '#333',
                       },
                       '& fieldset': {
-                        borderColor: 'rgba(80,80,80,0.7) !important',
+                        borderColor: 'rgba(33, 150, 243, 0.5) !important',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'rgba(33, 150, 243, 0.8) !important',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#2196f3 !important',
                       },
                     }
                   }}
-                  InputLabelProps={{ style: { color: '#bdbdbd' } }}
+                  InputLabelProps={{ style: { color: '#666' } }}
                   sx={{ mb: 2 }}
                 />
                 <TextField
@@ -274,52 +407,56 @@ function Auth() {
                   autoComplete="new-password"
                   InputProps={{
                     sx: {
-                      color: '#fff',
-                      background: 'rgba(10,10,10,0.85)',
+                      color: '#333',
+                      background: 'rgba(255, 255, 255, 0.8)',
                       borderRadius: 1,
                       '& input': {
-                        color: '#fff',
-                        background: 'rgba(10,10,10,0.85)',
-                        borderRadius: 1,
+                        color: '#333',
                       },
                       '& fieldset': {
-                        borderColor: 'rgba(80,80,80,0.7) !important',
+                        borderColor: 'rgba(33, 150, 243, 0.5) !important',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'rgba(33, 150, 243, 0.8) !important',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#2196f3 !important',
                       },
                     }
                   }}
-                  InputLabelProps={{ style: { color: '#bdbdbd' } }}
+                  InputLabelProps={{ style: { color: '#666' } }}
                   sx={{ mb: 2 }}
                 />
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#bdbdbd', fontSize: '0.95rem' }}>
-                  <FormControlLabel control={<Checkbox sx={{ color: '#4fc3f7' }} />} label={<span style={{ color: '#bdbdbd' }}>Remember Me</span>} />
-                  <span style={{ cursor: 'pointer', color: '#4fc3f7' }}>Forgot Password?</span>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#666', fontSize: '0.95rem' }}>
+                  <FormControlLabel control={<Checkbox sx={{ color: '#2196f3' }} />} label={<span style={{ color: '#666' }}>Remember Me</span>} />
+                  <span style={{ cursor: 'pointer', color: '#2196f3' }}>Forgot Password?</span>
                 </Box>
                 <Button type="submit" variant="contained" fullWidth sx={{
                   mt: 1,
                   fontWeight: 600,
                   fontSize: '1.1rem',
                   borderRadius: 2,
-                  background: 'rgba(10,10,10,0.95)',
+                  background: '#2196f3',
                   color: '#fff',
                   '&:hover': {
-                    background: 'rgba(30,30,30,1)'
+                    background: '#1976d2'
                   }
                 }}>
                   Login
                 </Button>
               </form>
-              <Typography align="center" sx={{ color: '#bdbdbd', mt: 1 }}>
-                Don't have an account? <span style={{ color: '#4fc3f7', cursor: 'pointer' }} onClick={() => setTab(1)}>Sign up</span>
+              <Typography align="center" sx={{ color: '#666', mt: 1 }}>
+                Don't have an account? <span style={{ color: '#2196f3', cursor: 'pointer' }} onClick={() => setTab(1)}>Sign up</span>
               </Typography>
-              <Divider sx={{ my: 1, bgcolor: '#bdbdbd' }}>OR</Divider>
+              <Divider sx={{ my: 1, bgcolor: '#ccc' }}>OR</Divider>
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mt: 1 }}>
-                <IconButton color="primary"><GoogleIcon /></IconButton>
-                <IconButton color="primary"><FacebookIcon /></IconButton>
+                <IconButton sx={{ color: '#2196f3' }}><GoogleIcon /></IconButton>
+                <IconButton sx={{ color: '#2196f3' }}><FacebookIcon /></IconButton>
               </Box>
             </>
           ) : (
             <>
-              <Typography variant="h6" sx={{ color: '#fff', mb: 1 }}>
+              <Typography variant="h6" sx={{ color: '#333', mb: 1 }}>
                 Create your account
               </Typography>
               <form onSubmit={handleRegisterSubmit} autoComplete="off">
@@ -334,20 +471,24 @@ function Auth() {
                   autoComplete="off"
                   InputProps={{
                     sx: {
-                      color: '#fff',
-                      background: 'rgba(10,10,10,0.85)',
+                      color: '#333',
+                      background: 'rgba(255, 255, 255, 0.8)',
                       borderRadius: 1,
                       '& input': {
-                        color: '#fff',
-                        background: 'rgba(10,10,10,0.85)',
-                        borderRadius: 1,
+                        color: '#333',
                       },
                       '& fieldset': {
-                        borderColor: 'rgba(80,80,80,0.7) !important',
+                        borderColor: 'rgba(33, 150, 243, 0.5) !important',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'rgba(33, 150, 243, 0.8) !important',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#2196f3 !important',
                       },
                     }
                   }}
-                  InputLabelProps={{ style: { color: '#bdbdbd' } }}
+                  InputLabelProps={{ style: { color: '#666' } }}
                   sx={{ mb: 2 }}
                 />
                 <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
@@ -362,20 +503,24 @@ function Auth() {
                     autoComplete="off"
                     InputProps={{
                       sx: {
-                        color: '#fff',
-                        background: 'rgba(10,10,10,0.85)',
+                        color: '#333',
+                        background: 'rgba(255, 255, 255, 0.8)',
                         borderRadius: 1,
                         '& input': {
-                          color: '#fff',
-                          background: 'rgba(10,10,10,0.85)',
-                          borderRadius: 1,
+                          color: '#333',
                         },
                         '& fieldset': {
-                          borderColor: 'rgba(80,80,80,0.7) !important',
+                          borderColor: 'rgba(33, 150, 243, 0.5) !important',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: 'rgba(33, 150, 243, 0.8) !important',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#2196f3 !important',
                         },
                       }
                     }}
-                    InputLabelProps={{ style: { color: '#bdbdbd' } }}
+                    InputLabelProps={{ style: { color: '#666' } }}
                   />
                   <TextField
                     name="lastName"
@@ -388,20 +533,24 @@ function Auth() {
                     autoComplete="off"
                     InputProps={{
                       sx: {
-                        color: '#fff',
-                        background: 'rgba(10,10,10,0.85)',
+                        color: '#333',
+                        background: 'rgba(255, 255, 255, 0.8)',
                         borderRadius: 1,
                         '& input': {
-                          color: '#fff',
-                          background: 'rgba(10,10,10,0.85)',
-                          borderRadius: 1,
+                          color: '#333',
                         },
                         '& fieldset': {
-                          borderColor: 'rgba(80,80,80,0.7) !important',
+                          borderColor: 'rgba(33, 150, 243, 0.5) !important',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: 'rgba(33, 150, 243, 0.8) !important',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#2196f3 !important',
                         },
                       }
                     }}
-                    InputLabelProps={{ style: { color: '#bdbdbd' } }}
+                    InputLabelProps={{ style: { color: '#666' } }}
                   />
                 </Box>
                 <TextField
@@ -416,20 +565,24 @@ function Auth() {
                   autoComplete="off"
                   InputProps={{
                     sx: {
-                      color: '#fff',
-                      background: 'rgba(10,10,10,0.85)',
+                      color: '#333',
+                      background: 'rgba(255, 255, 255, 0.8)',
                       borderRadius: 1,
                       '& input': {
-                        color: '#fff',
-                        background: 'rgba(10,10,10,0.85)',
-                        borderRadius: 1,
+                        color: '#333',
                       },
                       '& fieldset': {
-                        borderColor: 'rgba(80,80,80,0.7) !important',
+                        borderColor: 'rgba(33, 150, 243, 0.5) !important',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'rgba(33, 150, 243, 0.8) !important',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#2196f3 !important',
                       },
                     }
                   }}
-                  InputLabelProps={{ style: { color: '#bdbdbd' } }}
+                  InputLabelProps={{ style: { color: '#666' } }}
                   sx={{ mb: 2 }}
                 />
                 <TextField
@@ -444,37 +597,47 @@ function Auth() {
                   autoComplete="new-password"
                   InputProps={{
                     sx: {
-                      color: '#fff',
-                      background: 'rgba(10,10,10,0.85)',
+                      color: '#333',
+                      background: 'rgba(255, 255, 255, 0.8)',
                       borderRadius: 1,
                       '& input': {
-                        color: '#fff',
-                        background: 'rgba(10,10,10,0.85)',
-                        borderRadius: 1,
+                        color: '#333',
                       },
                       '& fieldset': {
-                        borderColor: 'rgba(80,80,80,0.7) !important',
+                        borderColor: 'rgba(33, 150, 243, 0.5) !important',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'rgba(33, 150, 243, 0.8) !important',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#2196f3 !important',
                       },
                     }
                   }}
-                  InputLabelProps={{ style: { color: '#bdbdbd' } }}
+                  InputLabelProps={{ style: { color: '#666' } }}
                   sx={{ mb: 2 }}
                 />
                 <FormControl fullWidth sx={{ mb: 2 }}>
-                  <InputLabel sx={{ color: '#bdbdbd' }}>Role</InputLabel>
+                  <InputLabel sx={{ color: '#666' }}>Role</InputLabel>
                   <Select
                     name="role"
                     value={registerForm.role}
                     label="Role"
                     onChange={handleRegisterChange}
                     required
-                    sx={{ color: '#fff', background: 'rgba(10,10,10,0.85)', borderRadius: 1 }}
-                    inputProps={{
-                      sx: {
-                        color: '#fff',
-                        background: 'rgba(10,10,10,0.85)',
-                        borderRadius: 1,
-                      }
+                    sx={{ 
+                      color: '#333', 
+                      background: 'rgba(255, 255, 255, 0.8)', 
+                      borderRadius: 1,
+                      '& fieldset': {
+                        borderColor: 'rgba(33, 150, 243, 0.5) !important',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'rgba(33, 150, 243, 0.8) !important',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#2196f3 !important',
+                      },
                     }}
                   >
                     <MenuItem value="" disabled>Select a role</MenuItem>
@@ -489,7 +652,7 @@ function Auth() {
                     variant="outlined"
                     component="label"
                     fullWidth
-                    sx={{ mb: 2, color: '#fff', borderColor: '#4fc3f7', fontWeight: 600 }}
+                    sx={{ mb: 2, color: '#2196f3', borderColor: '#2196f3', fontWeight: 600 }}
                   >
                     Upload Resume (PDF)
                     <input
@@ -498,7 +661,7 @@ function Auth() {
                       hidden
                       onChange={handleResumeChange}
                     />
-                    {resume && <span style={{ marginLeft: 8, fontSize: '0.95em', color: '#4fc3f7' }}>{resume.name}</span>}
+                    {resume && <span style={{ marginLeft: 8, fontSize: '0.95em', color: '#2196f3' }}>{resume.name}</span>}
                   </Button>
                 )}
                 {registerForm.role === 'trainer' && (
@@ -510,8 +673,23 @@ function Auth() {
                     required
                     fullWidth
                     margin="normal"
-                    InputProps={{ sx: { color: '#fff', background: 'rgba(10,10,10,0.85)', borderRadius: 1 } }}
-                    InputLabelProps={{ style: { color: '#bdbdbd' } }}
+                    InputProps={{ 
+                      sx: { 
+                        color: '#333', 
+                        background: 'rgba(255, 255, 255, 0.8)', 
+                        borderRadius: 1,
+                        '& fieldset': {
+                          borderColor: 'rgba(33, 150, 243, 0.5) !important',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: 'rgba(33, 150, 243, 0.8) !important',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#2196f3 !important',
+                        },
+                      } 
+                    }}
+                    InputLabelProps={{ style: { color: '#666' } }}
                     sx={{ mb: 2 }}
                   />
                 )}
@@ -524,8 +702,23 @@ function Auth() {
                     required
                     fullWidth
                     margin="normal"
-                    InputProps={{ sx: { color: '#fff', background: 'rgba(10,10,10,0.85)', borderRadius: 1 } }}
-                    InputLabelProps={{ style: { color: '#bdbdbd' } }}
+                    InputProps={{ 
+                      sx: { 
+                        color: '#333', 
+                        background: 'rgba(255, 255, 255, 0.8)', 
+                        borderRadius: 1,
+                        '& fieldset': {
+                          borderColor: 'rgba(33, 150, 243, 0.5) !important',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: 'rgba(33, 150, 243, 0.8) !important',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#2196f3 !important',
+                        },
+                      } 
+                    }}
+                    InputLabelProps={{ style: { color: '#666' } }}
                     sx={{ mb: 2 }}
                   />
                 )}
@@ -534,17 +727,17 @@ function Auth() {
                   fontWeight: 600,
                   fontSize: '1.1rem',
                   borderRadius: 2,
-                  background: 'rgba(10,10,10,0.95)',
+                  background: '#2196f3',
                   color: '#fff',
                   '&:hover': {
-                    background: 'rgba(30,30,30,1)'
+                    background: '#1976d2'
                   }
                 }}>
                   Register
                 </Button>
               </form>
-              <Typography align="center" sx={{ color: '#bdbdbd', mt: 1 }}>
-                Already have an account? <span style={{ color: '#4fc3f7', cursor: 'pointer' }} onClick={() => setTab(0)}>Sign in</span>
+              <Typography align="center" sx={{ color: '#666', mt: 1 }}>
+                Already have an account? <span style={{ color: '#2196f3', cursor: 'pointer' }} onClick={() => setTab(0)}>Sign in</span>
               </Typography>
             </>
           )}

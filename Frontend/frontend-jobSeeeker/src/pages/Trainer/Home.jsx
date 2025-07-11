@@ -3,6 +3,7 @@ import { Box, Typography, Paper, Grid, Card, CardContent, Button, Chip } from '@
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import { api } from '../../api';
+import LoadingScreen from '../../components/LoadingScreen';
 
 const TrainerHome = () => {
   const navigate = useNavigate();
@@ -64,11 +65,7 @@ const TrainerHome = () => {
   };
 
   if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <Typography>Loading...</Typography>
-      </Box>
-    );
+    return <LoadingScreen message="Loading trainer dashboard..." />;
   }
 
   return (

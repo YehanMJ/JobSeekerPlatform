@@ -11,6 +11,7 @@ import '../../App.css';
 import "@fontsource/quicksand";
 import ProfileButton from '../../components/ProfileButton';
 import Navbar from '../../components/Navbar';
+import LoadingScreen from '../../components/LoadingScreen';
 
 const images = [pp6, pp2, pp3];
 
@@ -112,15 +113,7 @@ const EmployerHome = () => {
           100% { transform: translateY(0); opacity: 0.7; }
         }
       `}</style>
-      {loading && (
-        <div className="bubble-loader">
-          <div className="bubble-spinner">
-            <div className="bubble"></div>
-            <div className="bubble"></div>
-            <div className="bubble"></div>
-          </div>
-        </div>
-      )}
+      {loading && <LoadingScreen message="Loading dashboard..." />}
       {!loading && (
         <>
           <Box sx={{ position: 'relative', width: '100%', height: '50vh', zIndex: 0, overflow: 'hidden' }}>

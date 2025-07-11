@@ -7,6 +7,7 @@ import "@fontsource/quicksand";
 import ProfileButton from '../../components/ProfileButton';
 import { Link } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
+import LoadingScreen from '../../components/LoadingScreen';
 
 const Trainer = () => {
   const [trainers, setTrainers] = useState([]);
@@ -16,8 +17,13 @@ const Trainer = () => {
   useEffect(() => {
     const fetchTrainers = async () => {
       try {
+        console.log('Starting to fetch trainers, loading:', true);
+        setLoading(true);
+        
         const res = await api.get('/user/all');
         const trainers = res.data.filter(u => u.role === 'trainer');
+        console.log('Trainers fetched:', trainers.length);
+        
         setTrainers(trainers);
         setCardIn(Array(trainers.length).fill(false));
         trainers.forEach((_, i) => {
@@ -29,17 +35,27 @@ const Trainer = () => {
             });
           }, 100 * i);
         });
+        
+        // Add a minimum loading time to ensure loading screen is visible
+        console.log('Waiting for minimum loading time...');
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Increased to 2 seconds
+        
       } catch (err) {
+        console.error('Error fetching trainers:', err);
         setTrainers([]);
       } finally {
+        console.log('Setting loading to false');
         setLoading(false);
       }
     };
     fetchTrainers();
   }, []);
 
+  console.log('Render - loading state:', loading, 'trainers count:', trainers.length);
+
   return (
-    <Box className="jobs-container" sx={{ minHeight: '100vh', position: 'relative', background: 'linear-gradient(135deg,rgb(0, 0, 0) 0%,rgb(0, 0, 0) 100%)', overflowX: 'hidden', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+    <Box className="jobs-container" sx={{ minHeight: '100vh', position: 'relative', background: 'linear-gradient(135deg,rgb(252, 252, 252) 0%,rgb(252, 252, 252) 100%)', overflowX: 'hidden', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+      {loading && <LoadingScreen message="Loading trainers..." />}
       <Navbar onLogout={() => { localStorage.removeItem('token'); window.location.href = '/login'; }} position="absolute" />
       <Box sx={{ height: '64px' }} /> {/* Spacer for AppBar */}
       <Box sx={{
@@ -54,9 +70,7 @@ const Trainer = () => {
         overflowX: 'hidden',
         maxWidth: '100vw',
       }}>
-        {loading ? (
-          <Typography sx={{ mt: 4, textAlign: 'center', color: '#fff' }}>Loading trainers...</Typography>
-        ) : trainers.length > 0 ? trainers.map((trainer, idx) => (
+        {!loading && trainers.length > 0 ? trainers.map((trainer, idx) => (
           <Fade in={cardIn[idx]} timeout={600} key={trainer.id || idx}>
             <Card sx={{ mb: 3, boxShadow: 2, borderRadius: 2, p: 2, display: 'flex', alignItems: 'flex-start', minHeight: 140, width: '100%', maxWidth: 800 }}>
               <Avatar
@@ -100,7 +114,7 @@ const Trainer = () => {
               </CardActions>
             </Card>
           </Fade>
-        )) : (
+        )) : !loading && (
           <Typography sx={{ textAlign: 'center', mt: 4, color: '#fff' }}>No trainers found.</Typography>
         )}
       </Box>

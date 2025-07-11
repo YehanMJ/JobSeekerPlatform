@@ -10,6 +10,7 @@ import '../../App.css';
 import "@fontsource/quicksand";
 import ProfileButton from '../../components/ProfileButton';
 import Navbar from '../../components/Navbar';
+import LoadingScreen from '../../components/LoadingScreen';
 
 const jobTypes = ['Full-Time', 'Part-Time', 'Internship', 'Contract'];
 const modalities = ['Onsite', 'Remote', 'Hybrid'];
@@ -155,29 +156,6 @@ const Jobs = () => {
     <Box className="jobs-container" sx={{ minHeight: '100vh', position: 'relative', background: 'linear-gradient(135deg,rgb(252, 252, 252) 0%,rgb(252, 252, 252) 100%)', overflowX: 'hidden', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
       <style>{`
         body { overflow-x: hidden !important; }
-        .bubble-loader {
-          position: fixed;
-          top: 0; left: 0; width: 100vw; height: 100vh;
-          background: rgba(20, 20, 30, 0.95);
-          display: flex; align-items: center; justify-content: center;
-          z-index: 9999;
-        }
-        .bubble-spinner {
-          display: flex; gap: 0.5rem;
-        }
-        .bubble {
-          width: 18px; height: 18px; border-radius: 50%;
-          background: #ffd700;
-          opacity: 0.8;
-          animation: bubble-bounce 1s infinite alternate;
-        }
-        .bubble:nth-child(2) { animation-delay: 0.2s; }
-        .bubble:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes bubble-bounce {
-          0% { transform: translateY(0); opacity: 0.7; }
-          50% { transform: translateY(-18px); opacity: 1; }
-          100% { transform: translateY(0); opacity: 0.7; }
-        }
         .job-card-custom {
           border: 1px solid #d0d7de !important;
           border-radius: 12px !important;
@@ -299,15 +277,7 @@ const Jobs = () => {
           }
         }
       `}</style>
-      {loading && (
-        <div className="bubble-loader">
-          <div className="bubble-spinner">
-            <div className="bubble"></div>
-            <div className="bubble"></div>
-            <div className="bubble"></div>
-          </div>
-        </div>
-      )}
+      {loading && <LoadingScreen message="Loading jobs..." />}
       <Navbar onLogout={handleLogout} position="absolute" />
       <Box sx={{ height: '64px' }} /> {/* Spacer for AppBar */}
       
@@ -404,6 +374,38 @@ const Jobs = () => {
         overflowX: 'hidden',
       }}>
         {!loading && filteredJobs.length > 0 ? filteredJobs.map((job, idx) => {
+          // Helper function to get correct company logo URL
+          const getCompanyLogoUrl = (url) => {
+            if (!url) return undefined;
+            // Handle different URL formats
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+              return url;
+            } else if (url.startsWith('/uploads')) {
+              return `http://localhost:8080${url}`;
+            } else {
+              return `http://localhost:8080/uploads/company-logos/${url}`;
+            }
+          };
+
+          // Helper function to generate random color for company initial
+          const getRandomColor = (companyName) => {
+            if (!companyName) return '#6366f1';
+            const colors = [
+              '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16',
+              '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9',
+              '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef',
+              '#ec4899', '#f43f5e', '#64748b', '#6b7280', '#374151'
+            ];
+            const hash = companyName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            return colors[hash % colors.length];
+          };
+
+          // Helper function to get company initial
+          const getCompanyInitial = (companyName) => {
+            if (!companyName) return 'C';
+            return companyName.charAt(0).toUpperCase();
+          };
+
           // Calculate days left (if job.deadline exists)
           let daysLeft = null;
           if (job.deadline) {
@@ -415,6 +417,13 @@ const Jobs = () => {
           const jobType = job.jobTime || 'Full-time Job';
           // Find user by employerId
           const employerUser = users.find(u => u.id === job.employerId);
+          
+          // Company logo and initial variables
+          const companyName = employerUser?.companyName || 'Company Name';
+          const companyLogoUrl = getCompanyLogoUrl(employerUser?.companyLogoUrl);
+          const hasLogo = companyLogoUrl && companyLogoUrl !== 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iMiIgZmlsbD0iI0Y4RjlGQSIvPgo8cGF0aCBkPSJNMjAgMTBIMTJWMzBIMjhWMThaIiBmaWxsPSIjNjU2Qzc2Ii8+Cjx0ZXh0IHg9IjIwIiB5PSIyNiIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNjU2Qzc2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5DPC90ZXh0Pgo8L3N2Zz4K';
+          const companyInitial = getCompanyInitial(companyName);
+          const randomColor = getRandomColor(companyName);
           return (
             <Card
               key={job.id}
@@ -441,10 +450,10 @@ const Jobs = () => {
                       overflow: 'hidden'
                     }}
                   >
-                    {employerUser?.companyLogoUrl ? (
+                    {hasLogo ? (
                       <img 
-                        src={employerUser.companyLogoUrl} 
-                        alt={employerUser.companyName || 'Company'} 
+                        src={companyLogoUrl} 
+                        alt={companyName} 
                         style={{ 
                           width: '100%', 
                           height: '100%', 
@@ -457,21 +466,42 @@ const Jobs = () => {
                       />
                     ) : null}
                     <Box sx={{ 
-                      display: employerUser?.companyLogoUrl ? 'none' : 'flex',
+                      display: hasLogo ? 'none' : 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       width: '100%',
-                      height: '100%'
+                      height: '100%',
+                      backgroundColor: randomColor,
+                      color: 'white',
+                      fontFamily: 'Quicksand, sans-serif',
+                      fontWeight: '600',
+                      fontSize: '16px'
                     }}>
-                      {(employerUser?.companyName || 'Company').charAt(0).toUpperCase()}
+                      {companyInitial}
                     </Box>
+                    {hasLogo && (
+                      <Box sx={{ 
+                        display: 'none',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: randomColor,
+                        color: 'white',
+                        fontFamily: 'Quicksand, sans-serif',
+                        fontWeight: '600',
+                        fontSize: '16px'
+                      }}>
+                        {companyInitial}
+                      </Box>
+                    )}
                   </Box>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography className="job-title">
                       {job.title}
                     </Typography>
                     <Typography className="job-company-name">
-                      {employerUser ? employerUser.companyName : 'Company Name'}
+                      {companyName}
                     </Typography>
                     <Box className="job-meta-info">
                       <Box className="job-meta-item">
