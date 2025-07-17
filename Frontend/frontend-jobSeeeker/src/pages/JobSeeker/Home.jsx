@@ -201,12 +201,13 @@ const Home = () => {
   };
 
   return (
-    <Box className="home-container" sx={{ minHeight: '100vh', position: 'relative', background: 'linear-gradient(135deg,rgb(252, 252, 252) 0%,rgb(252, 252, 252) 100%)', overflowX: 'hidden', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+    <>
+      {loading && <LoadingScreen />}
+      <Box className="home-container" sx={{ minHeight: '100vh', position: 'relative', background: 'linear-gradient(135deg,rgb(252, 252, 252) 0%,rgb(252, 252, 252) 100%)', overflowX: 'hidden', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
       {/* Prevent body scroll on x-axis */}
       <style>{`
         body { overflow-x: hidden !important; }
       `}</style>
-      {loading && <LoadingScreen message="Loading jobs..." />}
       {!loading && (
         <>
           <Box sx={{ position: 'relative', width: '100%', height: '50vh', zIndex: 0, overflow: 'hidden' }}>
@@ -649,6 +650,7 @@ const Home = () => {
         </Alert>
       </Snackbar>
     </Box>
+    </>
   );
 };
 

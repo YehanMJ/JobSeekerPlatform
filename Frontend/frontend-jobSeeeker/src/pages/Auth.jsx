@@ -5,72 +5,89 @@ import { api } from '../api';
 import { Box, Paper, Typography, Tabs, Tab, TextField, Button, Checkbox, FormControlLabel, Divider, IconButton, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
 import GoogleIcon from '@mui/icons-material/Google';
 import FacebookIcon from '@mui/icons-material/Facebook';
-import Globe from 'react-globe.gl';
-import mapBg from '../assets/p4.PNG';
-import LoadingScreen from '../components/LoadingScreen';
 
-// Component for animated circular waves
-const CircularWave = ({ x, y, delay, onComplete }) => {
-  const [scale, setScale] = useState(0);
-  const [opacity, setOpacity] = useState(0.8);
+// Animated Grid Background Component
+const AnimatedGrid = () => {
+  const canvasRef = useRef(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const interval = setInterval(() => {
-        setScale(prev => {
-          if (prev >= 3) {
-            // Reset animation and trigger new random position
-            setOpacity(0.8);
-            onComplete();
-            return 0;
-          }
-          return prev + 0.03;
-        });
-        setOpacity(prev => {
-          if (scale >= 2.5) {
-            return Math.max(0, prev - 0.02);
-          }
-          return Math.max(0, 0.8 - scale * 0.3);
-        });
-      }, 50);
-      return () => clearInterval(interval);
-    }, delay);
-    
-    return () => clearTimeout(timer);
-  }, [scale, delay, onComplete]);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    let animationId;
+
+    // Set canvas size
+    const updateCanvasSize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
+
+    // Grid properties
+    const gridSize = 40;
+    let offset = 0;
+
+    const drawGrid = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Grid lines color
+      ctx.strokeStyle = 'rgba(79, 195, 247, 0.3)';
+      ctx.lineWidth = 1;
+
+      // Draw vertical lines
+      for (let x = -gridSize + (offset % gridSize); x < canvas.width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+
+      // Draw horizontal lines
+      for (let y = -gridSize + (offset % gridSize); y < canvas.height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+
+      // Add glowing dots at intersections
+      ctx.fillStyle = 'rgba(79, 195, 247, 0.6)';
+      for (let x = -gridSize + (offset % gridSize); x < canvas.width; x += gridSize) {
+        for (let y = -gridSize + (offset % gridSize); y < canvas.height; y += gridSize) {
+          ctx.beginPath();
+          ctx.arc(x, y, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Animate the offset for moving grid effect
+      offset += 0.5;
+      animationId = requestAnimationFrame(drawGrid);
+    };
+
+    drawGrid();
+
+    return () => {
+      cancelAnimationFrame(animationId);
+      window.removeEventListener('resize', updateCanvasSize);
+    };
+  }, []);
 
   return (
-    <div
+    <canvas
+      ref={canvasRef}
       style={{
         position: 'absolute',
-        left: `${x}%`,
-        top: `${y}%`,
-        width: '80px',
-        height: '80px',
-        border: '2px solid rgba(79, 195, 247, 0.6)',
-        borderRadius: '50%',
-        transform: `translate(-50%, -50%) scale(${scale})`,
-        opacity: opacity,
-        pointerEvents: 'none',
-        transition: 'all 0.05s ease-out',
-        zIndex: 1,
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 0,
       }}
     />
   );
-};
-
-// Generate random wave positions
-const generateWaves = () => {
-  const waves = [];
-  for (let i = 0; i < 12; i++) {
-    waves.push({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      delay: Math.random() * 20000 + 5000, // 5-25 seconds delay
-    });
-  }
-  return waves;
 };
 
 const bgStyle = {
@@ -83,40 +100,25 @@ const bgStyle = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'flex-end',
-  backgroundImage: `url(${mapBg})`,
-  backgroundSize: 'cover',
-  backgroundPosition: 'center',
-  backgroundRepeat: 'no-repeat',
+  background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)',
   position: 'relative',
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'transparent',
-    zIndex: 0,
-  }
 };
 
 const panelStyle = {
   fontFamily: 'Inconsolata, monospace',
-  background: 'rgba(255, 255, 255, 0)',
+  background: 'rgba(255, 255, 255, 0.95)',
   borderRadius: 20,
   padding: '2rem 2.5rem',
   margin: '2rem 4rem',
   maxWidth: 400,
   width: '100%',
   color: '#333',
-  boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.1)',
+  boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.2)',
   display: 'flex',
   flexDirection: 'column',
   gap: '1.2rem',
   zIndex: 10,
   position: 'relative',
-  backdropFilter: 'blur(10px)',
-  border: '1px solid rgba(255, 255, 255, 0.2)',
 };
 
 function Auth() {
@@ -134,52 +136,7 @@ function Auth() {
   const [resume, setResume] = useState(null);
   const [expertise, setExpertise] = useState('');
   const [companyName, setCompanyName] = useState('');
-  const [currentWave, setCurrentWave] = useState(null);
-  const [isWaveActive, setIsWaveActive] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const globeRef = useRef();
-
-  // Generate a single wave
-  const generateNewWave = () => {
-    return {
-      id: Date.now(),
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      delay: Math.random() * 2000 + 1000, // 1-3 seconds delay
-    };
-  };
-
-  // Initialize first wave
-  useEffect(() => {
-    if (!isWaveActive) {
-      setCurrentWave(generateNewWave());
-      setIsWaveActive(true);
-    }
-  }, [isWaveActive]);
-
-  // Function to regenerate a new wave after current one completes
-  const regenerateWave = () => {
-    setIsWaveActive(false);
-    setTimeout(() => {
-      setCurrentWave(generateNewWave());
-      setIsWaveActive(true);
-    }, Math.random() * 3000 + 2000); // 2-5 seconds delay between waves
-  };
-
-  useEffect(() => {
-    let animationFrameId;
-    let angle = 0;
-    const animate = () => {
-      angle += 0.1;
-      if (globeRef.current) {
-        globeRef.current.pointOfView({ lat: 0, lng: angle }, 0);
-      }
-      animationFrameId = requestAnimationFrame(animate);
-    };
-    animate();
-    return () => cancelAnimationFrame(animationFrameId);
-  }, []);
 
   // Handlers for login
   const handleLoginChange = (e) => {
@@ -310,29 +267,8 @@ function Auth() {
 
   return (
     <Box sx={{ ...bgStyle, position: 'relative', overflow: 'hidden' }}>
-      {/* Light overlay for map background */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(240, 248, 255, 0.85)',
-          zIndex: 0,
-        }}
-      />
-      
-      {/* Animated circular waves - Only one at a time */}
-      {isWaveActive && currentWave && (
-        <CircularWave
-          key={currentWave.id}
-          x={currentWave.x}
-          y={currentWave.y}
-          delay={currentWave.delay}
-          onComplete={regenerateWave}
-        />
-      )}
+      {/* Animated Grid Background */}
+      <AnimatedGrid />
       
       {/* Title at top left */}
       <Typography
@@ -354,9 +290,37 @@ function Auth() {
       
       <Box sx={{ position: 'relative', zIndex: 1, minHeight: '100vh', width: '100vw', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
         <Paper elevation={8} sx={panelStyle}>
-          <Tabs value={tab} onChange={(_, v) => setTab(v)} textColor="primary" indicatorColor="primary">
-            <Tab label="Sign in" sx={{ color: '#333', fontWeight: 600 }} />
-            <Tab label="Sign up" sx={{ color: '#333', fontWeight: 600 }} />
+          <Tabs 
+            value={tab} 
+            onChange={(_, v) => setTab(v)} 
+            textColor="primary" 
+            indicatorColor="primary"
+            sx={{
+              '& .MuiTabs-indicator': {
+                backgroundColor: tab === 0 ? '#4fc3f7' : '#00e676',
+              }
+            }}
+          >
+            <Tab 
+              label="Sign in" 
+              sx={{ 
+                color: tab === 0 ? '#4fc3f7' : '#bdbdbd', 
+                fontWeight: 600,
+                '&:hover': {
+                  color: '#4fc3f7',
+                }
+              }} 
+            />
+            <Tab 
+              label="Sign up" 
+              sx={{ 
+                color: tab === 1 ? '#00e676' : '#bdbdbd', 
+                fontWeight: 600,
+                '&:hover': {
+                  color: '#00e676',
+                }
+              }} 
+            />
           </Tabs>
           {tab === 0 ? (
             <>
@@ -376,19 +340,21 @@ function Auth() {
                   InputProps={{
                     sx: {
                       color: '#333',
-                      background: 'rgba(255, 255, 255, 0.8)',
+                      background: 'rgba(255,255,255,0.9)',
                       borderRadius: 1,
                       '& input': {
                         color: '#333',
+                        background: 'transparent',
+                        borderRadius: 1,
                       },
                       '& fieldset': {
-                        borderColor: 'rgba(33, 150, 243, 0.5) !important',
+                        borderColor: 'rgba(120,120,120,0.5) !important',
                       },
                       '&:hover fieldset': {
-                        borderColor: 'rgba(33, 150, 243, 0.8) !important',
+                        borderColor: '#4fc3f7 !important',
                       },
                       '&.Mui-focused fieldset': {
-                        borderColor: '#2196f3 !important',
+                        borderColor: '#4fc3f7 !important',
                       },
                     }
                   }}
@@ -408,19 +374,21 @@ function Auth() {
                   InputProps={{
                     sx: {
                       color: '#333',
-                      background: 'rgba(255, 255, 255, 0.8)',
+                      background: 'rgba(255,255,255,0.9)',
                       borderRadius: 1,
                       '& input': {
                         color: '#333',
+                        background: 'transparent',
+                        borderRadius: 1,
                       },
                       '& fieldset': {
-                        borderColor: 'rgba(33, 150, 243, 0.5) !important',
+                        borderColor: 'rgba(120,120,120,0.5) !important',
                       },
                       '&:hover fieldset': {
-                        borderColor: 'rgba(33, 150, 243, 0.8) !important',
+                        borderColor: '#4fc3f7 !important',
                       },
                       '&.Mui-focused fieldset': {
-                        borderColor: '#2196f3 !important',
+                        borderColor: '#4fc3f7 !important',
                       },
                     }
                   }}
@@ -428,30 +396,30 @@ function Auth() {
                   sx={{ mb: 2 }}
                 />
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#666', fontSize: '0.95rem' }}>
-                  <FormControlLabel control={<Checkbox sx={{ color: '#2196f3' }} />} label={<span style={{ color: '#666' }}>Remember Me</span>} />
-                  <span style={{ cursor: 'pointer', color: '#2196f3' }}>Forgot Password?</span>
+                  <FormControlLabel control={<Checkbox sx={{ color: '#4fc3f7' }} />} label={<span style={{ color: '#666' }}>Remember Me</span>} />
+                  <span style={{ cursor: 'pointer', color: '#4fc3f7' }}>Forgot Password?</span>
                 </Box>
                 <Button type="submit" variant="contained" fullWidth sx={{
                   mt: 1,
                   fontWeight: 600,
                   fontSize: '1.1rem',
                   borderRadius: 2,
-                  background: '#2196f3',
+                  background: '#4fc3f7',
                   color: '#fff',
                   '&:hover': {
-                    background: '#1976d2'
+                    background: '#29b6f6'
                   }
                 }}>
                   Login
                 </Button>
               </form>
               <Typography align="center" sx={{ color: '#666', mt: 1 }}>
-                Don't have an account? <span style={{ color: '#2196f3', cursor: 'pointer' }} onClick={() => setTab(1)}>Sign up</span>
+                Don't have an account? <span style={{ color: '#00e676', cursor: 'pointer' }} onClick={() => setTab(1)}>Sign up</span>
               </Typography>
               <Divider sx={{ my: 1, bgcolor: '#ccc' }}>OR</Divider>
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mt: 1 }}>
-                <IconButton sx={{ color: '#2196f3' }}><GoogleIcon /></IconButton>
-                <IconButton sx={{ color: '#2196f3' }}><FacebookIcon /></IconButton>
+                <IconButton color="primary"><GoogleIcon /></IconButton>
+                <IconButton color="primary"><FacebookIcon /></IconButton>
               </Box>
             </>
           ) : (
@@ -472,19 +440,21 @@ function Auth() {
                   InputProps={{
                     sx: {
                       color: '#333',
-                      background: 'rgba(255, 255, 255, 0.8)',
+                      background: 'rgba(255,255,255,0.9)',
                       borderRadius: 1,
                       '& input': {
                         color: '#333',
+                        background: 'transparent',
+                        borderRadius: 1,
                       },
                       '& fieldset': {
-                        borderColor: 'rgba(33, 150, 243, 0.5) !important',
+                        borderColor: 'rgba(120,120,120,0.5) !important',
                       },
                       '&:hover fieldset': {
-                        borderColor: 'rgba(33, 150, 243, 0.8) !important',
+                        borderColor: '#00e676 !important',
                       },
                       '&.Mui-focused fieldset': {
-                        borderColor: '#2196f3 !important',
+                        borderColor: '#00e676 !important',
                       },
                     }
                   }}
@@ -504,19 +474,21 @@ function Auth() {
                     InputProps={{
                       sx: {
                         color: '#333',
-                        background: 'rgba(255, 255, 255, 0.8)',
+                        background: 'rgba(255,255,255,0.9)',
                         borderRadius: 1,
                         '& input': {
                           color: '#333',
+                          background: 'transparent',
+                          borderRadius: 1,
                         },
                         '& fieldset': {
-                          borderColor: 'rgba(33, 150, 243, 0.5) !important',
+                          borderColor: 'rgba(120,120,120,0.5) !important',
                         },
                         '&:hover fieldset': {
-                          borderColor: 'rgba(33, 150, 243, 0.8) !important',
+                          borderColor: '#00e676 !important',
                         },
                         '&.Mui-focused fieldset': {
-                          borderColor: '#2196f3 !important',
+                          borderColor: '#00e676 !important',
                         },
                       }
                     }}
@@ -534,19 +506,21 @@ function Auth() {
                     InputProps={{
                       sx: {
                         color: '#333',
-                        background: 'rgba(255, 255, 255, 0.8)',
+                        background: 'rgba(255,255,255,0.9)',
                         borderRadius: 1,
                         '& input': {
                           color: '#333',
+                          background: 'transparent',
+                          borderRadius: 1,
                         },
                         '& fieldset': {
-                          borderColor: 'rgba(33, 150, 243, 0.5) !important',
+                          borderColor: 'rgba(120,120,120,0.5) !important',
                         },
                         '&:hover fieldset': {
-                          borderColor: 'rgba(33, 150, 243, 0.8) !important',
+                          borderColor: '#00e676 !important',
                         },
                         '&.Mui-focused fieldset': {
-                          borderColor: '#2196f3 !important',
+                          borderColor: '#00e676 !important',
                         },
                       }
                     }}
@@ -566,19 +540,21 @@ function Auth() {
                   InputProps={{
                     sx: {
                       color: '#333',
-                      background: 'rgba(255, 255, 255, 0.8)',
+                      background: 'rgba(255,255,255,0.9)',
                       borderRadius: 1,
                       '& input': {
                         color: '#333',
+                        background: 'transparent',
+                        borderRadius: 1,
                       },
                       '& fieldset': {
-                        borderColor: 'rgba(33, 150, 243, 0.5) !important',
+                        borderColor: 'rgba(120,120,120,0.5) !important',
                       },
                       '&:hover fieldset': {
-                        borderColor: 'rgba(33, 150, 243, 0.8) !important',
+                        borderColor: '#00e676 !important',
                       },
                       '&.Mui-focused fieldset': {
-                        borderColor: '#2196f3 !important',
+                        borderColor: '#00e676 !important',
                       },
                     }
                   }}
@@ -598,19 +574,21 @@ function Auth() {
                   InputProps={{
                     sx: {
                       color: '#333',
-                      background: 'rgba(255, 255, 255, 0.8)',
+                      background: 'rgba(255,255,255,0.9)',
                       borderRadius: 1,
                       '& input': {
                         color: '#333',
+                        background: 'transparent',
+                        borderRadius: 1,
                       },
                       '& fieldset': {
-                        borderColor: 'rgba(33, 150, 243, 0.5) !important',
+                        borderColor: 'rgba(120,120,120,0.5) !important',
                       },
                       '&:hover fieldset': {
-                        borderColor: 'rgba(33, 150, 243, 0.8) !important',
+                        borderColor: '#00e676 !important',
                       },
                       '&.Mui-focused fieldset': {
-                        borderColor: '#2196f3 !important',
+                        borderColor: '#00e676 !important',
                       },
                     }
                   }}
@@ -627,17 +605,24 @@ function Auth() {
                     required
                     sx={{ 
                       color: '#333', 
-                      background: 'rgba(255, 255, 255, 0.8)', 
+                      background: 'rgba(255,255,255,0.9)', 
                       borderRadius: 1,
                       '& fieldset': {
-                        borderColor: 'rgba(33, 150, 243, 0.5) !important',
+                        borderColor: 'rgba(120,120,120,0.5) !important',
                       },
                       '&:hover fieldset': {
-                        borderColor: 'rgba(33, 150, 243, 0.8) !important',
+                        borderColor: '#00e676 !important',
                       },
                       '&.Mui-focused fieldset': {
-                        borderColor: '#2196f3 !important',
+                        borderColor: '#00e676 !important',
                       },
+                    }}
+                    inputProps={{
+                      sx: {
+                        color: '#333',
+                        background: 'transparent',
+                        borderRadius: 1,
+                      }
                     }}
                   >
                     <MenuItem value="" disabled>Select a role</MenuItem>
@@ -652,7 +637,7 @@ function Auth() {
                     variant="outlined"
                     component="label"
                     fullWidth
-                    sx={{ mb: 2, color: '#2196f3', borderColor: '#2196f3', fontWeight: 600 }}
+                    sx={{ mb: 2, color: '#333', borderColor: '#00e676', fontWeight: 600, '&:hover': { borderColor: '#00c853' } }}
                   >
                     Upload Resume (PDF)
                     <input
@@ -661,7 +646,7 @@ function Auth() {
                       hidden
                       onChange={handleResumeChange}
                     />
-                    {resume && <span style={{ marginLeft: 8, fontSize: '0.95em', color: '#2196f3' }}>{resume.name}</span>}
+                    {resume && <span style={{ marginLeft: 8, fontSize: '0.95em', color: '#00e676' }}>{resume.name}</span>}
                   </Button>
                 )}
                 {registerForm.role === 'trainer' && (
@@ -676,16 +661,16 @@ function Auth() {
                     InputProps={{ 
                       sx: { 
                         color: '#333', 
-                        background: 'rgba(255, 255, 255, 0.8)', 
+                        background: 'rgba(255,255,255,0.9)', 
                         borderRadius: 1,
                         '& fieldset': {
-                          borderColor: 'rgba(33, 150, 243, 0.5) !important',
+                          borderColor: 'rgba(120,120,120,0.5) !important',
                         },
                         '&:hover fieldset': {
-                          borderColor: 'rgba(33, 150, 243, 0.8) !important',
+                          borderColor: '#00e676 !important',
                         },
                         '&.Mui-focused fieldset': {
-                          borderColor: '#2196f3 !important',
+                          borderColor: '#00e676 !important',
                         },
                       } 
                     }}
@@ -705,16 +690,16 @@ function Auth() {
                     InputProps={{ 
                       sx: { 
                         color: '#333', 
-                        background: 'rgba(255, 255, 255, 0.8)', 
+                        background: 'rgba(255,255,255,0.9)', 
                         borderRadius: 1,
                         '& fieldset': {
-                          borderColor: 'rgba(33, 150, 243, 0.5) !important',
+                          borderColor: 'rgba(120,120,120,0.5) !important',
                         },
                         '&:hover fieldset': {
-                          borderColor: 'rgba(33, 150, 243, 0.8) !important',
+                          borderColor: '#00e676 !important',
                         },
                         '&.Mui-focused fieldset': {
-                          borderColor: '#2196f3 !important',
+                          borderColor: '#00e676 !important',
                         },
                       } 
                     }}
@@ -727,17 +712,17 @@ function Auth() {
                   fontWeight: 600,
                   fontSize: '1.1rem',
                   borderRadius: 2,
-                  background: '#2196f3',
+                  background: '#00e676',
                   color: '#fff',
                   '&:hover': {
-                    background: '#1976d2'
+                    background: '#00c853'
                   }
                 }}>
                   Register
                 </Button>
               </form>
               <Typography align="center" sx={{ color: '#666', mt: 1 }}>
-                Already have an account? <span style={{ color: '#2196f3', cursor: 'pointer' }} onClick={() => setTab(0)}>Sign in</span>
+                Already have an account? <span style={{ color: '#4fc3f7', cursor: 'pointer' }} onClick={() => setTab(0)}>Sign in</span>
               </Typography>
             </>
           )}

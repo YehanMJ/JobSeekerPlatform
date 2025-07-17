@@ -64,12 +64,13 @@ const Course = () => {
   };
 
   return (
-    <Box className="course-container" sx={{ minHeight: '100vh', position: 'relative', background: 'linear-gradient(135deg,rgb(252, 252, 252) 0%,rgb(252, 252, 252) 100%)', overflowX: 'hidden', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+    <>
+      {loading && <LoadingScreen />}
+      <Box className="course-container" sx={{ minHeight: '100vh', position: 'relative', background: 'linear-gradient(135deg,rgb(252, 252, 252) 0%,rgb(252, 252, 252) 100%)', overflowX: 'hidden', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
       {/* Prevent body scroll on x-axis */}
       <style>{`
         body { overflow-x: hidden !important; }
       `}</style>
-      {loading && <LoadingScreen message="Loading courses..." />}
       {!loading && (
         <>
           <Navbar onLogout={handleLogout} position="sticky" />
@@ -214,6 +215,7 @@ const Course = () => {
         </>
       )}
     </Box>
+    </>
   );
 };
 

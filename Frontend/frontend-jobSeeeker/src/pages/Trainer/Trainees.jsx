@@ -4,7 +4,6 @@ import { Search, Email, Phone, School, TrendingUp } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import { api } from '../../api';
-import LoadingScreen from '../../components/LoadingScreen';
 
 const Trainees = () => {
   const navigate = useNavigate();
@@ -137,7 +136,11 @@ const Trainees = () => {
   };
 
   if (loading) {
-    return <LoadingScreen message="Loading trainees..." />;
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <Typography>Loading...</Typography>
+      </Box>
+    );
   }
 
   return (

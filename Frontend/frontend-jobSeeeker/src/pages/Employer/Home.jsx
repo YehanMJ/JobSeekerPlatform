@@ -85,35 +85,13 @@ const EmployerHome = () => {
   };
 
   return (
-    <Box className="home-container" sx={{ minHeight: '100vh', position: 'relative', background: 'linear-gradient(135deg,rgb(0, 0, 0) 0%,rgb(0, 0, 0) 100%)', overflowX: 'hidden', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+    <>
+      {loading && <LoadingScreen />}
+      <Box className="home-container" sx={{ minHeight: '100vh', position: 'relative', background: 'linear-gradient(135deg,rgb(0, 0, 0) 0%,rgb(0, 0, 0) 100%)', overflowX: 'hidden', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
       {/* Prevent body scroll on x-axis */}
       <style>{`
         body { overflow-x: hidden !important; }
-        .bubble-loader {
-          position: fixed;
-          top: 0; left: 0; width: 100vw; height: 100vh;
-          background: rgba(20, 20, 30, 0.95);
-          display: flex; align-items: center; justify-content: center;
-          z-index: 9999;
-        }
-        .bubble-spinner {
-          display: flex; gap: 0.5rem;
-        }
-        .bubble {
-          width: 18px; height: 18px; border-radius: 50%;
-          background: #ffd700;
-          opacity: 0.8;
-          animation: bubble-bounce 1s infinite alternate;
-        }
-        .bubble:nth-child(2) { animation-delay: 0.2s; }
-        .bubble:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes bubble-bounce {
-          0% { transform: translateY(0); opacity: 0.7; }
-          50% { transform: translateY(-18px); opacity: 1; }
-          100% { transform: translateY(0); opacity: 0.7; }
-        }
       `}</style>
-      {loading && <LoadingScreen message="Loading dashboard..." />}
       {!loading && (
         <>
           <Box sx={{ position: 'relative', width: '100%', height: '50vh', zIndex: 0, overflow: 'hidden' }}>
@@ -290,6 +268,7 @@ const EmployerHome = () => {
         </>
       )}
     </Box>
+    </>
   );
 };
 

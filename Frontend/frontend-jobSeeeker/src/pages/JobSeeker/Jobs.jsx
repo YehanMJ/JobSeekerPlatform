@@ -40,7 +40,7 @@ const Jobs = () => {
         setJobs([]);
       } finally {
         // Ensure loader is visible for at least 1 second
-        timer = setTimeout(() => setLoading(false), 1000);
+        timer = setTimeout(() => setLoading(false), 2000);
       }
     };
     fetchJobs();
@@ -156,6 +156,29 @@ const Jobs = () => {
     <Box className="jobs-container" sx={{ minHeight: '100vh', position: 'relative', background: 'linear-gradient(135deg,rgb(252, 252, 252) 0%,rgb(252, 252, 252) 100%)', overflowX: 'hidden', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
       <style>{`
         body { overflow-x: hidden !important; }
+        .bubble-loader {
+          position: fixed;
+          top: 0; left: 0; width: 100vw; height: 100vh;
+          background: rgba(20, 20, 30, 0.95);
+          display: flex; align-items: center; justify-content: center;
+          z-index: 9999;
+        }
+        .bubble-spinner {
+          display: flex; gap: 0.5rem;
+        }
+        .bubble {
+          width: 18px; height: 18px; border-radius: 50%;
+          background: #ffd700;
+          opacity: 0.8;
+          animation: bubble-bounce 1s infinite alternate;
+        }
+        .bubble:nth-child(2) { animation-delay: 0.2s; }
+        .bubble:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bubble-bounce {
+          0% { transform: translateY(0); opacity: 0.7; }
+          50% { transform: translateY(-18px); opacity: 1; }
+          100% { transform: translateY(0); opacity: 0.7; }
+        }
         .job-card-custom {
           border: 1px solid #d0d7de !important;
           border-radius: 12px !important;
@@ -277,7 +300,7 @@ const Jobs = () => {
           }
         }
       `}</style>
-      {loading && <LoadingScreen message="Loading jobs..." />}
+      {loading && <LoadingScreen />}
       <Navbar onLogout={handleLogout} position="absolute" />
       <Box sx={{ height: '64px' }} /> {/* Spacer for AppBar */}
       

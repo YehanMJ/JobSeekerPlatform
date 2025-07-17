@@ -17,13 +17,8 @@ const Trainer = () => {
   useEffect(() => {
     const fetchTrainers = async () => {
       try {
-        console.log('Starting to fetch trainers, loading:', true);
-        setLoading(true);
-        
         const res = await api.get('/user/all');
         const trainers = res.data.filter(u => u.role === 'trainer');
-        console.log('Trainers fetched:', trainers.length);
-        
         setTrainers(trainers);
         setCardIn(Array(trainers.length).fill(false));
         trainers.forEach((_, i) => {
@@ -35,27 +30,20 @@ const Trainer = () => {
             });
           }, 100 * i);
         });
-        
-        // Add a minimum loading time to ensure loading screen is visible
-        console.log('Waiting for minimum loading time...');
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Increased to 2 seconds
-        
       } catch (err) {
-        console.error('Error fetching trainers:', err);
         setTrainers([]);
       } finally {
-        console.log('Setting loading to false');
-        setLoading(false);
+        // Add 2-second delay for loading screen
+        setTimeout(() => setLoading(false), 2000);
       }
     };
     fetchTrainers();
   }, []);
 
-  console.log('Render - loading state:', loading, 'trainers count:', trainers.length);
-
   return (
-    <Box className="jobs-container" sx={{ minHeight: '100vh', position: 'relative', background: 'linear-gradient(135deg,rgb(252, 252, 252) 0%,rgb(252, 252, 252) 100%)', overflowX: 'hidden', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
-      {loading && <LoadingScreen message="Loading trainers..." />}
+    <>
+      {loading && <LoadingScreen />}
+      <Box className="jobs-container" sx={{ minHeight: '100vh', position: 'relative', background: 'linear-gradient(135deg,rgb(252, 252, 252) 0%,rgb(252, 252, 252) 100%)', overflowX: 'hidden', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
       <Navbar onLogout={() => { localStorage.removeItem('token'); window.location.href = '/login'; }} position="absolute" />
       <Box sx={{ height: '64px' }} /> {/* Spacer for AppBar */}
       <Box sx={{
@@ -70,9 +58,44 @@ const Trainer = () => {
         overflowX: 'hidden',
         maxWidth: '100vw',
       }}>
-        {!loading && trainers.length > 0 ? trainers.map((trainer, idx) => (
-          <Fade in={cardIn[idx]} timeout={600} key={trainer.id || idx}>
-            <Card sx={{ mb: 3, boxShadow: 2, borderRadius: 2, p: 2, display: 'flex', alignItems: 'flex-start', minHeight: 140, width: '100%', maxWidth: 800 }}>
+        <style>{`
+          .trainer-card {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease-out;
+          }
+          .trainer-card.animate-in {
+            opacity: 1;
+            transform: translateY(0);
+          }
+          .trainer-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+          }
+        `}</style>
+        {trainers.length > 0 ? trainers.map((trainer, idx) => (
+          <Fade in={cardIn[idx]} timeout={800} key={trainer.id || idx}>
+            <Card 
+              className={`trainer-card ${cardIn[idx] ? 'animate-in' : ''}`}
+              sx={{ 
+                mb: 3, 
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)', 
+                borderRadius: 3, 
+                p: 2, 
+                display: 'flex', 
+                alignItems: 'flex-start', 
+                minHeight: 140, 
+                width: '100%', 
+                maxWidth: 800,
+                transition: 'all 0.3s ease-in-out',
+                border: '1px solid rgba(0, 0, 0, 0.05)',
+                background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+              }}
+              style={{ 
+                animationDelay: `${idx * 150}ms`,
+                transitionDelay: `${idx * 150}ms`
+              }}
+            >
               <Avatar
                 sx={{ width: 80, height: 80, mr: 3, mt: 1 }}
                 src={trainer.profilePictureUrl || undefined}
@@ -108,17 +131,33 @@ const Trainer = () => {
                 </Box>
               </Box>
               <CardActions sx={{ flexDirection: 'column', alignItems: 'flex-end', ml: 2, minWidth: 120 }}>
-                <Button variant="contained" color="info" sx={{ fontWeight: 700, px: 3, mb: 1, background: '#00b894' }}>
+                <Button 
+                  variant="contained" 
+                  color="info" 
+                  sx={{ 
+                    fontWeight: 700, 
+                    px: 3, 
+                    mb: 1, 
+                    background: 'linear-gradient(45deg, #00b894 30%, #00cec9 90%)',
+                    borderRadius: 2,
+                    transition: 'all 0.3s ease-in-out',
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #00a085 30%, #00b7b3 90%)',
+                      transform: 'scale(1.05)',
+                    }
+                  }}
+                >
                   GET HELP
                 </Button>
               </CardActions>
             </Card>
           </Fade>
         )) : !loading && (
-          <Typography sx={{ textAlign: 'center', mt: 4, color: '#fff' }}>No trainers found.</Typography>
+          <Typography sx={{ textAlign: 'center', mt: 4, color: '#666' }}>No trainers found.</Typography>
         )}
       </Box>
     </Box>
+    </>
   );
 };
 

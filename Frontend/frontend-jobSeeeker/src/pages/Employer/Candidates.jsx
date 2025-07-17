@@ -6,7 +6,6 @@ import "@fontsource/quicksand";
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import CandidateProfile from '../../components/CandidateProfile';
-import LoadingScreen from '../../components/LoadingScreen';
 
 const Candidates = () => {
   const navigate = useNavigate();
@@ -160,7 +159,6 @@ const Candidates = () => {
 
   return (
     <Box className="candidates-container" sx={{ minHeight: '100vh', position: 'relative', background: 'linear-gradient(135deg,rgb(0, 0, 0) 0%,rgb(0, 0, 0) 100%)', overflowX: 'hidden', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
-      {loading && <LoadingScreen message="Loading candidates..." />}
       <Navbar onLogout={handleLogout} position="absolute" />
       <Box sx={{ height: '64px' }} /> {/* Spacer for AppBar */}
       

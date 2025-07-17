@@ -1,87 +1,60 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 
-const LoadingScreen = ({ message = 'Loading...', fullScreen = true }) => {
-  const containerStyle = {
-    position: fullScreen ? 'fixed' : 'absolute',
-    top: 0,
-    left: 0,
-    width: '100vw',
-    height: '100vh',
-    background: '#ffffff',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 9999,
-  };
-
+const LoadingScreen = () => {
   return (
-    <Box sx={containerStyle}>
-      <style>{`
-        .bubble-loader {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 32px;
+    <Box
+      sx={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        background: '#fff',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 9999,
+      }}
+    >
+      <style jsx>{`
+        @keyframes bubble1 {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-20px); }
         }
-        .bubble-spinner {
-          display: flex;
-          gap: 0.5rem;
+        @keyframes bubble2 {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-20px); }
+        }
+        @keyframes bubble3 {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-20px); }
         }
         .bubble {
-          width: 18px;
-          height: 18px;
+          width: 20px;
+          height: 20px;
+          background: #4fc3f7;
           border-radius: 50%;
-          background: #2196f3;
-          opacity: 0.8;
-          animation: bubble-bounce 1s infinite alternate;
+          margin: 0 5px;
+          display: inline-block;
+        }
+        .bubble:nth-child(1) {
+          animation: bubble1 1.4s infinite ease-in-out;
+          animation-delay: -0.32s;
         }
         .bubble:nth-child(2) {
-          animation-delay: 0.2s;
+          animation: bubble2 1.4s infinite ease-in-out;
+          animation-delay: -0.16s;
         }
         .bubble:nth-child(3) {
-          animation-delay: 0.4s;
-        }
-        @keyframes bubble-bounce {
-          0% {
-            transform: translateY(0);
-            opacity: 0.7;
-          }
-          50% {
-            transform: translateY(-18px);
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(0);
-            opacity: 0.7;
-          }
+          animation: bubble3 1.4s infinite ease-in-out;
         }
       `}</style>
-      <div className="bubble-loader">
-        <div className="bubble-spinner">
-          <div className="bubble"></div>
-          <div className="bubble"></div>
-          <div className="bubble"></div>
-        </div>
+      <div>
+        <div className="bubble"></div>
+        <div className="bubble"></div>
+        <div className="bubble"></div>
       </div>
-      <Typography 
-        variant="h6" 
-        sx={{ 
-          color: '#333',
-          fontFamily: 'Inconsolata, monospace',
-          fontWeight: 500,
-          textAlign: 'center',
-          animation: 'pulse 1.5s ease-in-out infinite',
-          '@keyframes pulse': {
-            '0%': { opacity: 0.6 },
-            '50%': { opacity: 1 },
-            '100%': { opacity: 0.6 },
-          }
-        }}
-      >
-        {message}
-      </Typography>
     </Box>
   );
 };

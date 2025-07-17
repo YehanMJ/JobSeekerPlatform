@@ -6,7 +6,6 @@ import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
-import LoadingScreen from './LoadingScreen';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -221,7 +220,7 @@ const Profile = () => {
   };
 
   if (loading) {
-    return <LoadingScreen message="Loading profile..." />;
+    return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}><CircularProgress /></Box>;
   }
   if (!user) {
     return <Typography color="error" sx={{ mt: 4, textAlign: 'center' }}>Failed to load profile.</Typography>;

@@ -51,7 +51,8 @@ const TrainerHome = () => {
       } catch (err) {
         console.error('Error fetching data:', err);
       } finally {
-        setLoading(false);
+        // Add 2-second delay for loading screen
+        setTimeout(() => setLoading(false), 2000);
       }
     };
 
@@ -65,7 +66,7 @@ const TrainerHome = () => {
   };
 
   if (loading) {
-    return <LoadingScreen message="Loading trainer dashboard..." />;
+    return <LoadingScreen />;
   }
 
   return (
