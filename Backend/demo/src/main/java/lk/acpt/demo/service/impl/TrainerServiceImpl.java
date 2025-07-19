@@ -34,9 +34,25 @@ public class TrainerServiceImpl implements TrainerService {
     @Override
     public Trainer updateTrainer(Integer id, Trainer trainer) {
         Trainer existing = getTrainerById(id);
-        existing.setExpertise(trainer.getExpertise());
         
-        // Update new trainer profile fields
+        // Update basic user fields
+        if (trainer.getFirstName() != null) {
+            existing.setFirstName(trainer.getFirstName());
+        }
+        if (trainer.getLastName() != null) {
+            existing.setLastName(trainer.getLastName());
+        }
+        if (trainer.getUsername() != null) {
+            existing.setUsername(trainer.getUsername());
+        }
+        if (trainer.getEmail() != null) {
+            existing.setEmail(trainer.getEmail());
+        }
+        
+        // Update trainer-specific fields
+        if (trainer.getExpertise() != null) {
+            existing.setExpertise(trainer.getExpertise());
+        }
         if (trainer.getBio() != null) {
             existing.setBio(trainer.getBio());
         }

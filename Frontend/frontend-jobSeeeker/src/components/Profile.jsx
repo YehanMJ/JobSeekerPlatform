@@ -6,6 +6,7 @@ import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
+import { showSuccess, showError, showLoading, closeAllNotifications, showWarning } from '../utils/notifications';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -49,6 +50,10 @@ const Profile = () => {
     const file = e.target.files[0];
     if (!file || !user) return;
     setUploading(true);
+    
+    // Show loading notification
+    showLoading('Uploading profile picture...');
+    
     try {
       const token = localStorage.getItem('token');
       const formData = new FormData();
@@ -68,8 +73,13 @@ const Profile = () => {
       // Update user profile pic in UI
       setUser(prev => ({ ...prev, profilePictureUrl: res.data.profilePictureUrl }));
       setEditUser(prev => ({ ...prev, profilePictureUrl: res.data.profilePictureUrl }));
+      
+      closeAllNotifications();
+      showSuccess('Profile Picture Updated!', 'Your profile picture has been uploaded successfully.');
     } catch (err) {
+      closeAllNotifications();
       console.error('Profile picture upload error:', err);
+      showError('Upload Failed', 'Failed to upload profile picture. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -79,6 +89,10 @@ const Profile = () => {
     const file = e.target.files[0];
     if (!file || !user || user.role !== 'employer') return;
     setUploading(true);
+    
+    // Show loading notification
+    showLoading('Uploading company logo...');
+    
     try {
       const token = localStorage.getItem('token');
       const formData = new FormData();
@@ -93,8 +107,13 @@ const Profile = () => {
       // Update company logo in UI
       setUser(prev => ({ ...prev, companyLogoUrl: res.data.companyLogoUrl }));
       setEditUser(prev => ({ ...prev, companyLogoUrl: res.data.companyLogoUrl }));
+      
+      closeAllNotifications();
+      showSuccess('Company Logo Updated!', 'Your company logo has been uploaded successfully.');
     } catch (err) {
+      closeAllNotifications();
       console.error('Company logo upload error:', err);
+      showError('Upload Failed', 'Failed to upload company logo. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -117,6 +136,10 @@ const Profile = () => {
   const handleSaveCard = async (cardName) => {
     if (!editUser) return;
     setSaving(true);
+    
+    // Show loading notification
+    showLoading('Saving your profile...');
+    
     try {
       const token = localStorage.getItem('token');
       let url;
@@ -142,12 +165,25 @@ const Profile = () => {
         url = `/${editUser.role}s/${editUser.id}`;
       }
       
+      console.log('Making API call to:', url);
+      console.log('Payload:', payload);
+      console.log('Token:', token ? 'Present' : 'Missing');
+      console.log('User role:', editUser.role);
+      
       const res = await api.put(url, payload, {
-        headers: { Authorization: token ? `${token}` : undefined }
+        headers: { 
+          Authorization: token ? `${token}` : undefined,
+          'Content-Type': 'application/json'
+        }
       });
       
-      // The backend should now return the correct EmployerDTO with 'company' field
-      // We need to map it back to 'companyName' for consistency with UserDetailsDTO
+      console.log('API Response:', res.data);
+      console.log('Response status:', res.status);
+      
+      // Close loading notification
+      closeAllNotifications();
+      
+      // The backend should now return the correct updated data
       let updatedUser = { ...res.data };
       
       // For employers, ensure we have companyName for UI consistency
@@ -168,8 +204,19 @@ const Profile = () => {
       setUser(updatedUser);
       setEditUser(updatedUser);
       setEditingCard(null);
+      
+      // Show success notification
+      showSuccess('Profile Updated!', 'Your profile has been successfully updated.');
+      
     } catch (err) {
+      closeAllNotifications();
       console.error('Profile save error:', err);
+      console.error('Error response:', err.response?.data);
+      console.error('Error status:', err.response?.status);
+      
+      // Show error notification with detailed message
+      const errorMessage = err.response?.data?.message || err.response?.data || 'Failed to update profile. Please try again.';
+      showError('Update Failed', errorMessage);
     } finally {
       setSaving(false);
     }
@@ -641,6 +688,9 @@ const Profile = () => {
                       onChange={async (e) => {
                         const file = e.target.files[0];
                         if (!file) return;
+                        
+                        showLoading('Uploading CV...');
+                        
                         try {
                           const token = localStorage.getItem('token');
                           const formData = new FormData();
@@ -654,8 +704,13 @@ const Profile = () => {
                           });
                           setUser(prev => ({ ...prev, resumeUrl: res.data.resumeUrl }));
                           setEditUser(prev => ({ ...prev, resumeUrl: res.data.resumeUrl }));
+                          
+                          closeAllNotifications();
+                          showSuccess('CV Updated!', 'Your CV has been uploaded successfully.');
                         } catch (err) {
+                          closeAllNotifications();
                           console.error('CV upload error:', err);
+                          showError('Upload Failed', 'Failed to upload CV. Please try again.');
                         }
                       }}
                     />
@@ -685,6 +740,9 @@ const Profile = () => {
                       onChange={async (e) => {
                         const file = e.target.files[0];
                         if (!file) return;
+                        
+                        showLoading('Uploading CV...');
+                        
                         try {
                           const token = localStorage.getItem('token');
                           const formData = new FormData();
@@ -698,8 +756,13 @@ const Profile = () => {
                           });
                           setUser(prev => ({ ...prev, resumeUrl: res.data.resumeUrl }));
                           setEditUser(prev => ({ ...prev, resumeUrl: res.data.resumeUrl }));
+                          
+                          closeAllNotifications();
+                          showSuccess('CV Uploaded!', 'Your CV has been uploaded successfully.');
                         } catch (err) {
+                          closeAllNotifications();
                           console.error('CV upload error:', err);
+                          showError('Upload Failed', 'Failed to upload CV. Please try again.');
                         }
                       }}
                     />
