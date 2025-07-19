@@ -5,6 +5,7 @@ import { api } from '../api';
 import { Box, Paper, Typography, Tabs, Tab, TextField, Button, Checkbox, FormControlLabel, Divider, IconButton, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
 import GoogleIcon from '@mui/icons-material/Google';
 import FacebookIcon from '@mui/icons-material/Facebook';
+import { showSuccess, showError, showWarning, showLoading, closeAllNotifications } from '../utils/notifications';
 
 // Animated Grid Background Component
 const AnimatedGrid = () => {
@@ -144,30 +145,46 @@ function Auth() {
   };
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
+    
+    // Show loading notification
+    showLoading('Logging you in...');
+    
     try {
       const res = await api.post('/user/login', {
         username: loginForm.username,
         password: loginForm.password
       });
+      
+      closeAllNotifications();
+      
       if (res.data && res.data.token) {
         localStorage.setItem('token', res.data.token);
         console.log('Login successful:', res.data);
         sessionStorage.setItem('id', res.data.id || '');
         sessionStorage.setItem('role', res.data.role || '');
         setMessage('Login successful!');
-        // Redirect based on role
-        if (res.data.role === 'employer') {
-          navigate('/employer/home');
-        } else if(res.data.role === 'trainer') {
-          navigate('/trainer/home');
-        } else {
-          navigate('/home');
-        }
+        
+        // Show success notification
+        showSuccess('Welcome Back!', `Login successful. Redirecting to your dashboard...`);
+        
+        // Redirect based on role after a short delay
+        setTimeout(() => {
+          if (res.data.role === 'employer') {
+            navigate('/employer/home');
+          } else if(res.data.role === 'trainer') {
+            navigate('/trainer/home');
+          } else {
+            navigate('/home');
+          }
+        }, 1500);
       } else {
         setMessage('Login failed: No token received.');
+        showError('Login Failed', 'No authentication token received from server.');
       }
     } catch (err) {
+      closeAllNotifications();
       setMessage('Login failed.');
+      showError('Login Failed', 'Invalid username or password. Please try again.');
     }
   };
 
@@ -191,12 +208,18 @@ function Auth() {
     if (registerForm.role === 'jobseeker') endpoint = '/job-seekers';
     else if (registerForm.role === 'trainer') endpoint = '/trainers';
     else if (registerForm.role === 'employer') endpoint = '/employers';
+    
+    // Show loading notification
+    showLoading('Creating your account...');
+    
     try {
       let payload;
       let config = {};
       if (registerForm.role === 'jobseeker') {
         // Backend expects jobSeeker (JSON blob) and file (PDF)
         if (!resume) {
+          closeAllNotifications();
+          showWarning('Resume Required', 'Please upload your resume (PDF) to complete registration.');
           setMessage('Please upload your resume (PDF).');
           return;
         }
@@ -232,6 +255,8 @@ function Auth() {
         await api.post(endpoint, payload, config);
       } else if (registerForm.role === 'employer') {
         if (!companyName) {
+          closeAllNotifications();
+          showWarning('Company Name Required', 'Please enter your company name to complete registration.');
           setMessage('Please enter your company name.');
           return;
         }
@@ -258,10 +283,15 @@ function Auth() {
         config = { headers: { 'Content-Type': 'application/json' } };
         await api.post(endpoint, payload, config);
       }
+      
+      closeAllNotifications();
       setMessage('Registration successful!');
+      showSuccess('Account Created!', 'Registration successful! Please log in with your credentials.');
       setTab(0);
     } catch (err) {
+      closeAllNotifications();
       setMessage('Registration failed.');
+      showError('Registration Failed', 'Unable to create account. Please check your information and try again.');
     }
   };
 

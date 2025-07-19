@@ -1,0 +1,223 @@
+/* Custom SweetAlert2 Styles for Job Seeker Platform */
+
+/* Base toast styling */
+.custom-toast {
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(10px) !important;
+  min-width: 320px !important;
+  max-width: 400px !important;
+  font-family: 'Roboto', sans-serif !important;
+}
+
+.custom-toast-title {
+  font-weight: 600 !important;
+  font-size: 16px !important;
+  margin-bottom: 8px !important;
+}
+
+.custom-toast-content {
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+}
+
+/* Success notifications */
+.success-toast {
+  border-left: 4px solid #00b894 !important;
+}
+
+.success-title {
+  color: #00b894 !important;
+}
+
+.success-content {
+  color: #2d3436 !important;
+}
+
+/* Error notifications */
+.error-toast {
+  border-left: 4px solid #e74c3c !important;
+}
+
+.error-title {
+  color: #e74c3c !important;
+}
+
+.error-content {
+  color: #2d3436 !important;
+}
+
+/* Warning notifications */
+.warning-toast {
+  border-left: 4px solid #f39c12 !important;
+}
+
+.warning-title {
+  color: #f39c12 !important;
+}
+
+.warning-content {
+  color: #2d3436 !important;
+}
+
+/* Info notifications */
+.info-toast {
+  border-left: 4px solid #3498db !important;
+}
+
+.info-title {
+  color: #3498db !important;
+}
+
+.info-content {
+  color: #2d3436 !important;
+}
+
+/* Loading notification */
+.loading-toast {
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(0, 184, 148, 0.2) !important;
+}
+
+.loading-title {
+  color: #00b894 !important;
+  font-weight: 600 !important;
+}
+
+/* Confirmation dialog */
+.confirmation-dialog {
+  border-radius: 16px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  max-width: 500px !important;
+}
+
+.confirmation-title {
+  color: #2d3436 !important;
+  font-weight: 700 !important;
+  font-size: 20px !important;
+}
+
+.confirmation-content {
+  color: #636e72 !important;
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+}
+
+/* Custom buttons */
+.custom-confirm-btn {
+  background: linear-gradient(45deg, #00b894 30%, #00cec9 90%) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 12px 24px !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  transition: all 0.3s ease !important;
+  margin: 0 8px !important;
+}
+
+.custom-confirm-btn:hover {
+  background: linear-gradient(45deg, #00a085 30%, #00b7b3 90%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(0, 184, 148, 0.3) !important;
+}
+
+.custom-cancel-btn {
+  background: linear-gradient(45deg, #e74c3c 30%, #c0392b 90%) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 12px 24px !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  transition: all 0.3s ease !important;
+  margin: 0 8px !important;
+}
+
+.custom-cancel-btn:hover {
+  background: linear-gradient(45deg, #c0392b 30%, #a93226 90%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3) !important;
+}
+
+/* Close button styling */
+.swal2-close {
+  color: #b2bec3 !important;
+  font-size: 24px !important;
+  transition: all 0.3s ease !important;
+}
+
+.swal2-close:hover {
+  color: #636e72 !important;
+  transform: scale(1.1) !important;
+}
+
+/* Timer progress bar */
+.swal2-timer-progress-bar {
+  background: linear-gradient(90deg, #00b894, #00cec9) !important;
+}
+
+/* Icon customization */
+.swal2-icon {
+  border: none !important;
+  margin: 20px auto 15px !important;
+}
+
+.swal2-icon.swal2-success {
+  border-color: #00b894 !important;
+  color: #00b894 !important;
+}
+
+.swal2-icon.swal2-error {
+  border-color: #e74c3c !important;
+  color: #e74c3c !important;
+}
+
+.swal2-icon.swal2-warning {
+  border-color: #f39c12 !important;
+  color: #f39c12 !important;
+}
+
+.swal2-icon.swal2-info {
+  border-color: #3498db !important;
+  color: #3498db !important;
+}
+
+.swal2-icon.swal2-question {
+  border-color: #9b59b6 !important;
+  color: #9b59b6 !important;
+}
+
+/* Animation enhancements */
+.swal2-show {
+  animation: swal2-show 0.3s ease-in-out !important;
+}
+
+.swal2-hide {
+  animation: swal2-hide 0.15s ease-in-out !important;
+}
+
+@keyframes swal2-show {
+  0% {
+    transform: translateY(-30px) scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes swal2-hide {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-30px) scale(0.9);
+    opacity: 0;
+  }
+}

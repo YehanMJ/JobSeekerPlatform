@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Box, Button, Typography, Card, CardContent, CardActions, CircularProgress, Snackbar, Alert } from '@mui/material';
+import { Box, Button, Typography, Card, CardContent, CardActions, CircularProgress } from '@mui/material';
 import pp1 from '../../assets/pp1.jpeg';
 import pp2 from '../../assets/pp2.jpg';
 import pp3 from '../../assets/pp3.jpg';
@@ -12,6 +12,7 @@ import "@fontsource/quicksand";
 import ProfileButton from '../../components/ProfileButton';
 import Navbar from '../../components/Navbar';
 import LoadingScreen from '../../components/LoadingScreen';
+import { showSuccess, showError, showWarning, showInfo } from '../../utils/notifications';
 
 const images = [pp6, pp2, pp3];
 
@@ -24,7 +25,6 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [applyingJobId, setApplyingJobId] = useState(null);
   const [appliedJobs, setAppliedJobs] = useState(new Set());
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -111,11 +111,7 @@ const Home = () => {
     try {
       // Check if already applied
       if (appliedJobs.has(jobId)) {
-        setSnackbar({
-          open: true,
-          message: 'You have already applied for this job',
-          severity: 'warning'
-        });
+        showWarning('Already Applied', 'You have already applied for this job');
         return;
       }
 
@@ -124,11 +120,8 @@ const Home = () => {
       const userId = sessionStorage.getItem('id');
       
       if (!userId) {
-        setSnackbar({
-          open: true,
-          message: 'Please log in to apply for jobs',
-          severity: 'error'
-        });
+        showError('Authentication Required', 'Please log in to apply for jobs');
+        setApplyingJobId(null);
         return;
       }
 
@@ -139,11 +132,8 @@ const Home = () => {
       });
 
       if (userRes.data.role !== 'jobseeker') {
-        setSnackbar({
-          open: true,
-          message: 'Only job seekers can apply for jobs',
-          severity: 'error'
-        });
+        showError('Access Denied', 'Only job seekers can apply for jobs');
+        setApplyingJobId(null);
         return;
       }
 
@@ -162,42 +152,22 @@ const Home = () => {
         // Add job to applied jobs set
         setAppliedJobs(prev => new Set([...prev, jobId]));
         
-        setSnackbar({
-          open: true,
-          message: 'Application submitted successfully!',
-          severity: 'success'
-        });
+        showSuccess('Application Submitted!', 'Your application has been submitted successfully. The employer will review it soon.');
       }
     } catch (error) {
       console.error('Error applying for job:', error);
       
       // Handle specific error cases
       if (error.response?.status === 401) {
-        setSnackbar({
-          open: true,
-          message: 'Please log in to apply for jobs',
-          severity: 'error'
-        });
+        showError('Authentication Required', 'Please log in to apply for jobs');
       } else if (error.response?.status === 409) {
-        setSnackbar({
-          open: true,
-          message: 'You have already applied for this job',
-          severity: 'warning'
-        });
+        showWarning('Already Applied', 'You have already applied for this job');
       } else {
-        setSnackbar({
-          open: true,
-          message: 'Failed to submit application. Please try again.',
-          severity: 'error'
-        });
+        showError('Application Failed', 'Failed to submit application. Please try again later.');
       }
     } finally {
       setApplyingJobId(null);
     }
-  };
-
-  const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
   };
 
   return (
@@ -633,22 +603,6 @@ const Home = () => {
           </Box>
         </>
       )}
-      
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert 
-          onClose={handleCloseSnackbar} 
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
     </>
   );

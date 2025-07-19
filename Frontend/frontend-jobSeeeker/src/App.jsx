@@ -15,6 +15,7 @@ import TrainerHome from './pages/Trainer/Home';
 import UploadCourses from './pages/Trainer/UploadCourses';
 import Trainees from './pages/Trainer/Trainees';
 import './App.css';
+import './styles/notifications.css';
 
 function App() {
   const navigate = useNavigate();

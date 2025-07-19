@@ -8,6 +8,7 @@ import ProfileButton from '../../components/ProfileButton';
 import { Link } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import LoadingScreen from '../../components/LoadingScreen';
+import { showSuccess, showError, showInfo } from '../../utils/notifications';
 
 const Trainer = () => {
   const [trainers, setTrainers] = useState([]);
@@ -30,8 +31,12 @@ const Trainer = () => {
             });
           }, 100 * i);
         });
+        
+        // Show success notification when trainers are loaded
+        showSuccess('Trainers Loaded!', `Found ${trainers.length} available trainers`);
       } catch (err) {
         setTrainers([]);
+        showError('Loading Failed', 'Unable to load trainers. Please try again.');
       } finally {
         // Add 2-second delay for loading screen
         setTimeout(() => setLoading(false), 2000);
@@ -134,6 +139,9 @@ const Trainer = () => {
                 <Button 
                   variant="contained" 
                   color="info" 
+                  onClick={() => {
+                    showInfo('Help Request Sent!', `You've requested help from ${trainer.firstName} ${trainer.lastName}. They will contact you soon.`);
+                  }}
                   sx={{ 
                     fontWeight: 700, 
                     px: 3, 

@@ -11,6 +11,7 @@ import "@fontsource/quicksand";
 import ProfileButton from '../../components/ProfileButton';
 import Navbar from '../../components/Navbar';
 import LoadingScreen from '../../components/LoadingScreen';
+import { showSuccess, showError, showWarning } from '../../utils/notifications';
 
 const jobTypes = ['Full-Time', 'Part-Time', 'Internship', 'Contract'];
 const modalities = ['Onsite', 'Remote', 'Hybrid'];
@@ -100,12 +101,12 @@ const Jobs = () => {
       const userId = sessionStorage.getItem('id');
       
       if (!userId) {
-        alert('Please log in to apply for jobs');
+        showWarning('Login Required', 'Please log in to apply for jobs.');
         return;
       }
 
       if (appliedJobs.has(jobId)) {
-        alert('You have already applied to this job');
+        showWarning('Already Applied', 'You have already applied to this job.');
         return;
       }
 
@@ -124,10 +125,10 @@ const Jobs = () => {
 
       // Update the applied jobs set
       setAppliedJobs(prev => new Set([...prev, jobId]));
-      alert('Application submitted successfully!');
+      showSuccess('Application Submitted!', 'Your job application has been submitted successfully. Good luck!');
     } catch (err) {
       console.error('Error applying to job:', err);
-      alert('Failed to submit application. Please try again.');
+      showError('Application Failed', 'Failed to submit application. Please try again.');
     }
   };
 
