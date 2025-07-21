@@ -100,7 +100,7 @@ const bgStyle = {
   overflow: 'hidden',
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'flex-end',
+  justifyContent: 'center',
   background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)',
   position: 'relative',
 };
@@ -110,8 +110,8 @@ const panelStyle = {
   background: 'rgba(255, 255, 255, 0.95)',
   borderRadius: 20,
   padding: '2rem 2.5rem',
-  margin: '2rem 4rem',
-  maxWidth: 400,
+  margin: '2rem',
+  maxWidth: 500,
   width: '100%',
   color: '#333',
   boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.2)',
@@ -124,6 +124,7 @@ const panelStyle = {
 
 function Auth() {
   const [tab, setTab] = useState(0); // 0 = login, 1 = register
+  const [registerStep, setRegisterStep] = useState(1); // 1-4 for registration steps
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [registerForm, setRegisterForm] = useState({ 
     username: '', 
@@ -131,6 +132,7 @@ function Auth() {
     lastName: '', 
     email: '', 
     password: '', 
+    confirmPassword: '',
     role: '' 
   });
   const [message, setMessage] = useState('');
@@ -196,6 +198,62 @@ function Auth() {
       setExpertise('');
       setCompanyName('');
     }
+  };
+  
+  const handleNextStep = () => {
+    // Validation for each step
+    if (registerStep === 1) {
+      if (!registerForm.firstName || !registerForm.lastName) {
+        showError('Required Fields', 'Please fill in both first name and last name.');
+        return;
+      }
+    } else if (registerStep === 2) {
+      if (!registerForm.email || !registerForm.username) {
+        showError('Required Fields', 'Please fill in both email and username.');
+        return;
+      }
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(registerForm.email)) {
+        showError('Invalid Email', 'Please enter a valid email address.');
+        return;
+      }
+    } else if (registerStep === 3) {
+      if (!registerForm.password || !registerForm.confirmPassword) {
+        showError('Required Fields', 'Please fill in both password fields.');
+        return;
+      }
+      if (registerForm.password !== registerForm.confirmPassword) {
+        showError('Password Mismatch', 'Passwords do not match. Please try again.');
+        return;
+      }
+      if (registerForm.password.length < 6) {
+        showError('Weak Password', 'Password must be at least 6 characters long.');
+        return;
+      }
+    }
+    
+    setRegisterStep(registerStep + 1);
+  };
+  
+  const handlePrevStep = () => {
+    setRegisterStep(registerStep - 1);
+  };
+  
+  const resetRegistration = () => {
+    setRegisterStep(1);
+    setRegisterForm({ 
+      username: '', 
+      firstName: '', 
+      lastName: '', 
+      email: '', 
+      password: '', 
+      confirmPassword: '',
+      role: '' 
+    });
+    setResume(null);
+    setExpertise('');
+    setCompanyName('');
   };
   const handleResumeChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -288,6 +346,7 @@ function Auth() {
       setMessage('Registration successful!');
       showSuccess('Account Created!', 'Registration successful! Please log in with your credentials.');
       setTab(0);
+      resetRegistration();
     } catch (err) {
       closeAllNotifications();
       setMessage('Registration failed.');
@@ -318,7 +377,7 @@ function Auth() {
         Job Seekers
       </Typography>
       
-      <Box sx={{ position: 'relative', zIndex: 1, minHeight: '100vh', width: '100vw', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+      <Box sx={{ position: 'relative', zIndex: 1, minHeight: '100vh', width: '100vw', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Paper elevation={8} sx={panelStyle}>
           <Tabs 
             value={tab} 
@@ -455,43 +514,15 @@ function Auth() {
           ) : (
             <>
               <Typography variant="h6" sx={{ color: '#333', mb: 1 }}>
-                Create your account
+                Create your account - Step {registerStep} of 4
               </Typography>
-              <form onSubmit={handleRegisterSubmit} autoComplete="off">
-                <TextField
-                  name="username"
-                  label="Username"
-                  value={registerForm.username}
-                  onChange={handleRegisterChange}
-                  required
-                  fullWidth
-                  margin="normal"
-                  autoComplete="off"
-                  InputProps={{
-                    sx: {
-                      color: '#333',
-                      background: 'rgba(255,255,255,0.9)',
-                      borderRadius: 1,
-                      '& input': {
-                        color: '#333',
-                        background: 'transparent',
-                        borderRadius: 1,
-                      },
-                      '& fieldset': {
-                        borderColor: 'rgba(120,120,120,0.5) !important',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: '#00e676 !important',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#00e676 !important',
-                      },
-                    }
-                  }}
-                  InputLabelProps={{ style: { color: '#666' } }}
-                  sx={{ mb: 2 }}
-                />
-                <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+              
+              {/* Step 1: First Name & Last Name */}
+              {registerStep === 1 && (
+                <>
+                  <Typography variant="body2" sx={{ color: '#666', mb: 2 }}>
+                    Let's start with your basic information
+                  </Typography>
                   <TextField
                     name="firstName"
                     label="First Name"
@@ -523,6 +554,7 @@ function Auth() {
                       }
                     }}
                     InputLabelProps={{ style: { color: '#666' } }}
+                    sx={{ mb: 2 }}
                   />
                   <TextField
                     name="lastName"
@@ -555,141 +587,269 @@ function Auth() {
                       }
                     }}
                     InputLabelProps={{ style: { color: '#666' } }}
+                    sx={{ mb: 2 }}
                   />
-                </Box>
-                <TextField
-                  name="email"
-                  label="Email"
-                  type="email"
-                  value={registerForm.email}
-                  onChange={handleRegisterChange}
-                  required
-                  fullWidth
-                  margin="normal"
-                  autoComplete="off"
-                  InputProps={{
-                    sx: {
-                      color: '#333',
-                      background: 'rgba(255,255,255,0.9)',
-                      borderRadius: 1,
-                      '& input': {
-                        color: '#333',
-                        background: 'transparent',
-                        borderRadius: 1,
-                      },
-                      '& fieldset': {
-                        borderColor: 'rgba(120,120,120,0.5) !important',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: '#00e676 !important',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#00e676 !important',
-                      },
-                    }
-                  }}
-                  InputLabelProps={{ style: { color: '#666' } }}
-                  sx={{ mb: 2 }}
-                />
-                <TextField
-                  name="password"
-                  label="Password"
-                  type="password"
-                  value={registerForm.password}
-                  onChange={handleRegisterChange}
-                  required
-                  fullWidth
-                  margin="normal"
-                  autoComplete="new-password"
-                  InputProps={{
-                    sx: {
-                      color: '#333',
-                      background: 'rgba(255,255,255,0.9)',
-                      borderRadius: 1,
-                      '& input': {
-                        color: '#333',
-                        background: 'transparent',
-                        borderRadius: 1,
-                      },
-                      '& fieldset': {
-                        borderColor: 'rgba(120,120,120,0.5) !important',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: '#00e676 !important',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#00e676 !important',
-                      },
-                    }
-                  }}
-                  InputLabelProps={{ style: { color: '#666' } }}
-                  sx={{ mb: 2 }}
-                />
-                <FormControl fullWidth sx={{ mb: 2 }}>
-                  <InputLabel sx={{ color: '#666' }}>Role</InputLabel>
-                  <Select
-                    name="role"
-                    value={registerForm.role}
-                    label="Role"
-                    onChange={handleRegisterChange}
-                    required
-                    sx={{ 
-                      color: '#333', 
-                      background: 'rgba(255,255,255,0.9)', 
-                      borderRadius: 1,
-                      '& fieldset': {
-                        borderColor: 'rgba(120,120,120,0.5) !important',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: '#00e676 !important',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#00e676 !important',
-                      },
-                    }}
-                    inputProps={{
-                      sx: {
-                        color: '#333',
-                        background: 'transparent',
-                        borderRadius: 1,
+                  <Button 
+                    onClick={handleNextStep}
+                    variant="contained" 
+                    fullWidth 
+                    sx={{
+                      mt: 1,
+                      fontWeight: 600,
+                      fontSize: '1.1rem',
+                      borderRadius: 2,
+                      background: '#00e676',
+                      color: '#fff',
+                      '&:hover': {
+                        background: '#00c853'
                       }
                     }}
                   >
-                    <MenuItem value="" disabled>Select a role</MenuItem>
-                    <MenuItem value="jobseeker">Job Seeker</MenuItem>
-                    <MenuItem value="employer">Employer</MenuItem>
-                    <MenuItem value="trainer">Trainer</MenuItem>
-                    <MenuItem value="admin">Admin</MenuItem>
-                  </Select>
-                </FormControl>
-                {registerForm.role === 'jobseeker' && (
-                  <Button
-                    variant="outlined"
-                    component="label"
-                    fullWidth
-                    sx={{ mb: 2, color: '#333', borderColor: '#00e676', fontWeight: 600, '&:hover': { borderColor: '#00c853' } }}
-                  >
-                    Upload Resume (PDF)
-                    <input
-                      type="file"
-                      accept="application/pdf"
-                      hidden
-                      onChange={handleResumeChange}
-                    />
-                    {resume && <span style={{ marginLeft: 8, fontSize: '0.95em', color: '#00e676' }}>{resume.name}</span>}
+                    Next
                   </Button>
-                )}
-                {registerForm.role === 'trainer' && (
+                </>
+              )}
+
+              {/* Step 2: Email & Username */}
+              {registerStep === 2 && (
+                <>
+                  <Typography variant="body2" sx={{ color: '#666', mb: 2 }}>
+                    Now let's set up your account credentials
+                  </Typography>
                   <TextField
-                    name="expertise"
-                    label="Expertise"
-                    value={expertise}
-                    onChange={e => setExpertise(e.target.value)}
+                    name="email"
+                    label="Email"
+                    type="email"
+                    value={registerForm.email}
+                    onChange={handleRegisterChange}
                     required
                     fullWidth
                     margin="normal"
-                    InputProps={{ 
-                      sx: { 
+                    autoComplete="off"
+                    InputProps={{
+                      sx: {
+                        color: '#333',
+                        background: 'rgba(255,255,255,0.9)',
+                        borderRadius: 1,
+                        '& input': {
+                          color: '#333',
+                          background: 'transparent',
+                          borderRadius: 1,
+                        },
+                        '& fieldset': {
+                          borderColor: 'rgba(120,120,120,0.5) !important',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: '#00e676 !important',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#00e676 !important',
+                        },
+                      }
+                    }}
+                    InputLabelProps={{ style: { color: '#666' } }}
+                    sx={{ mb: 2 }}
+                  />
+                  <TextField
+                    name="username"
+                    label="Username"
+                    value={registerForm.username}
+                    onChange={handleRegisterChange}
+                    required
+                    fullWidth
+                    margin="normal"
+                    autoComplete="off"
+                    InputProps={{
+                      sx: {
+                        color: '#333',
+                        background: 'rgba(255,255,255,0.9)',
+                        borderRadius: 1,
+                        '& input': {
+                          color: '#333',
+                          background: 'transparent',
+                          borderRadius: 1,
+                        },
+                        '& fieldset': {
+                          borderColor: 'rgba(120,120,120,0.5) !important',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: '#00e676 !important',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#00e676 !important',
+                        },
+                      }
+                    }}
+                    InputLabelProps={{ style: { color: '#666' } }}
+                    sx={{ mb: 2 }}
+                  />
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button 
+                      onClick={handlePrevStep}
+                      variant="outlined" 
+                      fullWidth 
+                      sx={{
+                        fontWeight: 600,
+                        borderRadius: 2,
+                        borderColor: '#00e676',
+                        color: '#00e676',
+                        '&:hover': {
+                          borderColor: '#00c853',
+                          backgroundColor: 'rgba(0, 230, 118, 0.04)'
+                        }
+                      }}
+                    >
+                      Back
+                    </Button>
+                    <Button 
+                      onClick={handleNextStep}
+                      variant="contained" 
+                      fullWidth 
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: '1.1rem',
+                        borderRadius: 2,
+                        background: '#00e676',
+                        color: '#fff',
+                        '&:hover': {
+                          background: '#00c853'
+                        }
+                      }}
+                    >
+                      Next
+                    </Button>
+                  </Box>
+                </>
+              )}
+
+              {/* Step 3: Password & Confirm Password */}
+              {registerStep === 3 && (
+                <>
+                  <Typography variant="body2" sx={{ color: '#666', mb: 2 }}>
+                    Choose a secure password for your account
+                  </Typography>
+                  <TextField
+                    name="password"
+                    label="Password"
+                    type="password"
+                    value={registerForm.password}
+                    onChange={handleRegisterChange}
+                    required
+                    fullWidth
+                    margin="normal"
+                    autoComplete="new-password"
+                    InputProps={{
+                      sx: {
+                        color: '#333',
+                        background: 'rgba(255,255,255,0.9)',
+                        borderRadius: 1,
+                        '& input': {
+                          color: '#333',
+                          background: 'transparent',
+                          borderRadius: 1,
+                        },
+                        '& fieldset': {
+                          borderColor: 'rgba(120,120,120,0.5) !important',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: '#00e676 !important',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#00e676 !important',
+                        },
+                      }
+                    }}
+                    InputLabelProps={{ style: { color: '#666' } }}
+                    sx={{ mb: 2 }}
+                  />
+                  <TextField
+                    name="confirmPassword"
+                    label="Confirm Password"
+                    type="password"
+                    value={registerForm.confirmPassword}
+                    onChange={handleRegisterChange}
+                    required
+                    fullWidth
+                    margin="normal"
+                    autoComplete="new-password"
+                    InputProps={{
+                      sx: {
+                        color: '#333',
+                        background: 'rgba(255,255,255,0.9)',
+                        borderRadius: 1,
+                        '& input': {
+                          color: '#333',
+                          background: 'transparent',
+                          borderRadius: 1,
+                        },
+                        '& fieldset': {
+                          borderColor: 'rgba(120,120,120,0.5) !important',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: '#00e676 !important',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#00e676 !important',
+                        },
+                      }
+                    }}
+                    InputLabelProps={{ style: { color: '#666' } }}
+                    sx={{ mb: 2 }}
+                  />
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button 
+                      onClick={handlePrevStep}
+                      variant="outlined" 
+                      fullWidth 
+                      sx={{
+                        fontWeight: 600,
+                        borderRadius: 2,
+                        borderColor: '#00e676',
+                        color: '#00e676',
+                        '&:hover': {
+                          borderColor: '#00c853',
+                          backgroundColor: 'rgba(0, 230, 118, 0.04)'
+                        }
+                      }}
+                    >
+                      Back
+                    </Button>
+                    <Button 
+                      onClick={handleNextStep}
+                      variant="contained" 
+                      fullWidth 
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: '1.1rem',
+                        borderRadius: 2,
+                        background: '#00e676',
+                        color: '#fff',
+                        '&:hover': {
+                          background: '#00c853'
+                        }
+                      }}
+                    >
+                      Next
+                    </Button>
+                  </Box>
+                </>
+              )}
+
+              {/* Step 4: Role Selection & Role-specific Fields */}
+              {registerStep === 4 && (
+                <>
+                  <Typography variant="body2" sx={{ color: '#666', mb: 2 }}>
+                    Finally, tell us what type of user you are
+                  </Typography>
+                  <FormControl fullWidth sx={{ mb: 2 }}>
+                    <InputLabel sx={{ color: '#666' }}>Role</InputLabel>
+                    <Select
+                      name="role"
+                      value={registerForm.role}
+                      label="Role"
+                      onChange={handleRegisterChange}
+                      required
+                      sx={{ 
                         color: '#333', 
                         background: 'rgba(255,255,255,0.9)', 
                         borderRadius: 1,
@@ -702,57 +862,142 @@ function Auth() {
                         '&.Mui-focused fieldset': {
                           borderColor: '#00e676 !important',
                         },
-                      } 
-                    }}
-                    InputLabelProps={{ style: { color: '#666' } }}
-                    sx={{ mb: 2 }}
-                  />
-                )}
-                {registerForm.role === 'employer' && (
-                  <TextField
-                    name="companyName"
-                    label="Company Name"
-                    value={companyName}
-                    onChange={e => setCompanyName(e.target.value)}
-                    required
-                    fullWidth
-                    margin="normal"
-                    InputProps={{ 
-                      sx: { 
-                        color: '#333', 
-                        background: 'rgba(255,255,255,0.9)', 
-                        borderRadius: 1,
-                        '& fieldset': {
-                          borderColor: 'rgba(120,120,120,0.5) !important',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: '#00e676 !important',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#00e676 !important',
-                        },
-                      } 
-                    }}
-                    InputLabelProps={{ style: { color: '#666' } }}
-                    sx={{ mb: 2 }}
-                  />
-                )}
-                <Button type="submit" variant="contained" fullWidth sx={{
-                  mt: 1,
-                  fontWeight: 600,
-                  fontSize: '1.1rem',
-                  borderRadius: 2,
-                  background: '#00e676',
-                  color: '#fff',
-                  '&:hover': {
-                    background: '#00c853'
-                  }
-                }}>
-                  Register
-                </Button>
-              </form>
-              <Typography align="center" sx={{ color: '#666', mt: 1 }}>
-                Already have an account? <span style={{ color: '#4fc3f7', cursor: 'pointer' }} onClick={() => setTab(0)}>Sign in</span>
+                      }}
+                      inputProps={{
+                        sx: {
+                          color: '#333',
+                          background: 'transparent',
+                          borderRadius: 1,
+                        }
+                      }}
+                    >
+                      <MenuItem value="" disabled>Select a role</MenuItem>
+                      <MenuItem value="jobseeker">Job Seeker</MenuItem>
+                      <MenuItem value="employer">Employer</MenuItem>
+                      <MenuItem value="trainer">Trainer</MenuItem>
+                      <MenuItem value="admin">Admin</MenuItem>
+                    </Select>
+                  </FormControl>
+                  
+                  {registerForm.role === 'jobseeker' && (
+                    <Button
+                      variant="outlined"
+                      component="label"
+                      fullWidth
+                      sx={{ mb: 2, color: '#333', borderColor: '#00e676', fontWeight: 600, '&:hover': { borderColor: '#00c853' } }}
+                    >
+                      Upload Resume (PDF)
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        hidden
+                        onChange={handleResumeChange}
+                      />
+                      {resume && <span style={{ marginLeft: 8, fontSize: '0.95em', color: '#00e676' }}>{resume.name}</span>}
+                    </Button>
+                  )}
+                  
+                  {registerForm.role === 'trainer' && (
+                    <TextField
+                      name="expertise"
+                      label="Expertise"
+                      value={expertise}
+                      onChange={e => setExpertise(e.target.value)}
+                      required
+                      fullWidth
+                      margin="normal"
+                      InputProps={{ 
+                        sx: { 
+                          color: '#333', 
+                          background: 'rgba(255,255,255,0.9)', 
+                          borderRadius: 1,
+                          '& fieldset': {
+                            borderColor: 'rgba(120,120,120,0.5) !important',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#00e676 !important',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#00e676 !important',
+                          },
+                        } 
+                      }}
+                      InputLabelProps={{ style: { color: '#666' } }}
+                      sx={{ mb: 2 }}
+                    />
+                  )}
+                  
+                  {registerForm.role === 'employer' && (
+                    <TextField
+                      name="companyName"
+                      label="Company Name"
+                      value={companyName}
+                      onChange={e => setCompanyName(e.target.value)}
+                      required
+                      fullWidth
+                      margin="normal"
+                      InputProps={{ 
+                        sx: { 
+                          color: '#333', 
+                          background: 'rgba(255,255,255,0.9)', 
+                          borderRadius: 1,
+                          '& fieldset': {
+                            borderColor: 'rgba(120,120,120,0.5) !important',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#00e676 !important',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#00e676 !important',
+                          },
+                        } 
+                      }}
+                      InputLabelProps={{ style: { color: '#666' } }}
+                      sx={{ mb: 2 }}
+                    />
+                  )}
+                  
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button 
+                      onClick={handlePrevStep}
+                      variant="outlined" 
+                      fullWidth 
+                      sx={{
+                        fontWeight: 600,
+                        borderRadius: 2,
+                        borderColor: '#00e676',
+                        color: '#00e676',
+                        '&:hover': {
+                          borderColor: '#00c853',
+                          backgroundColor: 'rgba(0, 230, 118, 0.04)'
+                        }
+                      }}
+                    >
+                      Back
+                    </Button>
+                    <Button 
+                      onClick={handleRegisterSubmit}
+                      variant="contained" 
+                      fullWidth 
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: '1.1rem',
+                        borderRadius: 2,
+                        background: '#00e676',
+                        color: '#fff',
+                        '&:hover': {
+                          background: '#00c853'
+                        }
+                      }}
+                    >
+                      Create Account
+                    </Button>
+                  </Box>
+                </>
+              )}
+              
+              <Typography align="center" sx={{ color: '#666', mt: 2 }}>
+                Already have an account? <span style={{ color: '#4fc3f7', cursor: 'pointer' }} onClick={() => { setTab(0); resetRegistration(); }}>Sign in</span>
               </Typography>
             </>
           )}

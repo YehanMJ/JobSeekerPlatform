@@ -40,13 +40,31 @@ const TrainerHome = () => {
         const trainerCourses = coursesRes.data.filter(course => course.trainerId === parseInt(userId));
         setCourses(trainerCourses);
 
-        // Fetch trainees (mock data for now)
-        // TODO: Replace with actual API call
-        setTrainees([
-          { id: 1, name: 'John Doe', course: 'React Development', progress: 85 },
-          { id: 2, name: 'Jane Smith', course: 'Node.js Backend', progress: 72 },
-          { id: 3, name: 'Mike Johnson', course: 'React Development', progress: 91 },
-        ]);
+        // Fetch actual trainees from enrollment API
+        try {
+          const enrollmentsRes = await api.get(`/enrollments/trainer/${userId}`, {
+            headers: { Authorization: token ? `${token}` : undefined }
+          });
+          
+          if (enrollmentsRes.data && Array.isArray(enrollmentsRes.data)) {
+            // Process enrollments to create trainees data
+            const traineesData = enrollmentsRes.data.map(enrollment => ({
+              id: enrollment.jobSeekerId,
+              name: enrollment.jobSeekerName || 'Unknown Student',
+              course: enrollment.courseTitle || 'Unknown Course',
+              progress: enrollment.progress || 0,
+              status: enrollment.status || 'ENROLLED',
+              enrollmentDate: enrollment.enrollmentDate
+            }));
+            setTrainees(traineesData);
+          } else {
+            setTrainees([]);
+          }
+        } catch (enrollmentErr) {
+          console.error('Error fetching enrollments:', enrollmentErr);
+          // Fallback to empty array if enrollment API fails
+          setTrainees([]);
+        }
 
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -109,10 +127,10 @@ const TrainerHome = () => {
             <Card elevation={2} sx={{ borderRadius: 2, background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)' }}>
               <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 600, color: '#1e3c72' }}>
-                  Course Categories
+                  Total Students
                 </Typography>
                 <Typography variant="h3" sx={{ fontWeight: 700, color: '#1e3c72' }}>
-                  {new Set(courses.map(c => c.category)).size}
+                  {trainees.length}
                 </Typography>
               </CardContent>
             </Card>
@@ -121,10 +139,10 @@ const TrainerHome = () => {
             <Card elevation={2} sx={{ borderRadius: 2, background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)' }}>
               <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 600, color: '#1e3c72' }}>
-                  Total Duration
+                  Avg. Progress
                 </Typography>
                 <Typography variant="h3" sx={{ fontWeight: 700, color: '#1e3c72' }}>
-                  {courses.reduce((sum, c) => sum + (parseInt(c.duration) || 0), 0)}h
+                  {trainees.length > 0 ? Math.round(trainees.reduce((sum, t) => sum + t.progress, 0) / trainees.length) : 0}%
                 </Typography>
               </CardContent>
             </Card>
@@ -247,10 +265,10 @@ const TrainerHome = () => {
         {/* Recent Trainees */}
         <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
           <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, color: '#1e3c72' }}>
-            Recent Trainees
+            Recent Students
           </Typography>
           <Grid container spacing={3}>
-            {trainees.map((trainee) => (
+            {trainees.length > 0 ? trainees.slice(0, 6).map((trainee) => (
               <Grid item xs={12} md={6} lg={4} key={trainee.id}>
                 <Card elevation={2} sx={{ borderRadius: 2 }}>
                   <CardContent>
@@ -260,13 +278,40 @@ const TrainerHome = () => {
                     <Typography sx={{ color: '#777', mb: 1 }}>
                       Course: {trainee.course}
                     </Typography>
-                    <Typography sx={{ color: '#777' }}>
+                    <Typography sx={{ color: '#777', mb: 1 }}>
                       Progress: {trainee.progress}%
                     </Typography>
+                    <Typography sx={{ color: '#777', mb: 1 }}>
+                      Status: {trainee.status}
+                    </Typography>
+                    {trainee.enrollmentDate && (
+                      <Typography sx={{ color: '#999', fontSize: '0.875rem' }}>
+                        Enrolled: {new Date(trainee.enrollmentDate).toLocaleDateString()}
+                      </Typography>
+                    )}
                   </CardContent>
                 </Card>
               </Grid>
-            ))}
+            )) : (
+              <Grid item xs={12}>
+                <Typography sx={{ color: '#777', textAlign: 'center', py: 4 }}>
+                  No students enrolled in your courses yet. Create engaging courses to attract learners!
+                </Typography>
+              </Grid>
+            )}
+            {trainees.length > 6 && (
+              <Grid item xs={12}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                  <Button 
+                    variant="outlined" 
+                    sx={{ color: '#667eea', borderColor: '#667eea' }}
+                    onClick={() => navigate('/trainer/trainees')}
+                  >
+                    View All Students ({trainees.length})
+                  </Button>
+                </Box>
+              </Grid>
+            )}
           </Grid>
         </Paper>
       </Box>

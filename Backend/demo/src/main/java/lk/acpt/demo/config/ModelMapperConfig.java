@@ -2,9 +2,12 @@ package lk.acpt.demo.config;
 
 import lk.acpt.demo.dto.ApplicationDTO;
 import lk.acpt.demo.dto.EmployerDTO;
+import lk.acpt.demo.dto.EnrollmentDTO;
+import lk.acpt.demo.dto.TrainerDTO;
 import lk.acpt.demo.dto.UserDetailsDTO;
 import lk.acpt.demo.entity.Application;
 import lk.acpt.demo.entity.Employer;
+import lk.acpt.demo.entity.Enrollment;
 import lk.acpt.demo.entity.JobSeeker;
 import lk.acpt.demo.entity.Trainer;
 import org.modelmapper.ModelMapper;
@@ -80,6 +83,43 @@ public class ModelMapperConfig {
                 .addMapping(Trainer::getExperience, UserDetailsDTO::setExperience)
                 .addMapping(Trainer::getCertifications, UserDetailsDTO::setCertifications)
                 .addMapping(Trainer::getAchievements, UserDetailsDTO::setAchievements);
+
+        // Configure mapping between Trainer entity and TrainerDTO
+        mapper.createTypeMap(Trainer.class, TrainerDTO.class)
+                .addMapping(Trainer::getId, TrainerDTO::setId)
+                .addMapping(Trainer::getUsername, TrainerDTO::setUsername)
+                .addMapping(Trainer::getFirstName, TrainerDTO::setFirstName)
+                .addMapping(Trainer::getLastName, TrainerDTO::setLastName)
+                .addMapping(Trainer::getEmail, TrainerDTO::setEmail)
+                .addMapping(Trainer::getRole, TrainerDTO::setRole)
+                .addMapping(Trainer::getExpertise, TrainerDTO::setExpertise)
+                .addMapping(Trainer::getProfilePictureUrl, TrainerDTO::setProfilePictureUrl)
+                .addMapping(Trainer::getBio, TrainerDTO::setBio)
+                .addMapping(Trainer::getExperience, TrainerDTO::setExperience)
+                .addMapping(Trainer::getCertifications, TrainerDTO::setCertifications)
+                .addMapping(Trainer::getAchievements, TrainerDTO::setAchievements);
+
+        // Configure reverse mapping between TrainerDTO and Trainer entity
+        mapper.createTypeMap(TrainerDTO.class, Trainer.class)
+                .addMapping(TrainerDTO::getId, Trainer::setId)
+                .addMapping(TrainerDTO::getUsername, Trainer::setUsername)
+                .addMapping(TrainerDTO::getFirstName, Trainer::setFirstName)
+                .addMapping(TrainerDTO::getLastName, Trainer::setLastName)
+                .addMapping(TrainerDTO::getEmail, Trainer::setEmail)
+                .addMapping(TrainerDTO::getRole, Trainer::setRole)
+                .addMapping(TrainerDTO::getExpertise, Trainer::setExpertise)
+                .addMapping(TrainerDTO::getProfilePictureUrl, Trainer::setProfilePictureUrl)
+                .addMapping(TrainerDTO::getBio, Trainer::setBio)
+                .addMapping(TrainerDTO::getExperience, Trainer::setExperience)
+                .addMapping(TrainerDTO::getCertifications, Trainer::setCertifications)
+                .addMapping(TrainerDTO::getAchievements, Trainer::setAchievements);
+
+        // Configure mapping between Enrollment entity and EnrollmentDTO
+        mapper.createTypeMap(Enrollment.class, EnrollmentDTO.class)
+                .addMapping(src -> src.getCourse().getId(), EnrollmentDTO::setCourseId)
+                .addMapping(src -> src.getJobSeeker().getId(), EnrollmentDTO::setJobSeekerId)
+                .addMapping(src -> src.getCourse().getTitle(), EnrollmentDTO::setCourseTitle)
+                .addMapping(src -> src.getJobSeeker().getFirstName() + " " + src.getJobSeeker().getLastName(), EnrollmentDTO::setJobSeekerName);
         
         return mapper;
     }

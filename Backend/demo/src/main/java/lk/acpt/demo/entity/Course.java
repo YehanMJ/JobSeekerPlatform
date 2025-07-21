@@ -29,6 +29,8 @@ public class Course {
     private String duration;
     private String level;
     private String category;
+    private Double price; // Added price field
+    private String status; // Added status field (ACTIVE, INACTIVE, DRAFT)
     
     @ElementCollection
     @CollectionTable(name = "course_prerequisites", joinColumns = @JoinColumn(name = "course_id"))

@@ -17,6 +17,8 @@ public class CourseDTO {
     private String duration;
     private String level;
     private String category;
+    private Double price; // Added price field
+    private String status; // Added status field
     private List<String> prerequisites;
     private List<CourseModuleDTO> modules;
     private LocalDateTime createdAt;

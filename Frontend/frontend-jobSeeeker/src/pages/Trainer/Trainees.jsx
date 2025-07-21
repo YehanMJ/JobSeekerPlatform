@@ -18,85 +18,47 @@ const Trainees = () => {
         const token = localStorage.getItem('token');
         const trainerId = sessionStorage.getItem('id');
         
-        // TODO: Replace with actual API call
-        // Mock data for now
-        const mockTrainees = [
-          {
-            id: 1,
-            name: 'John Doe',
-            email: 'john.doe@email.com',
-            phone: '+1234567890',
-            course: 'React Development',
-            progress: 85,
-            status: 'Active',
-            enrolledDate: '2024-01-15',
-            lastActivity: '2024-01-20',
-            profilePicture: null,
-            completedModules: 8,
-            totalModules: 10
-          },
-          {
-            id: 2,
-            name: 'Jane Smith',
-            email: 'jane.smith@email.com',
-            phone: '+1234567891',
-            course: 'Node.js Backend',
-            progress: 72,
-            status: 'Active',
-            enrolledDate: '2024-01-10',
-            lastActivity: '2024-01-19',
-            profilePicture: null,
-            completedModules: 6,
-            totalModules: 8
-          },
-          {
-            id: 3,
-            name: 'Mike Johnson',
-            email: 'mike.johnson@email.com',
-            phone: '+1234567892',
-            course: 'React Development',
-            progress: 91,
-            status: 'Active',
-            enrolledDate: '2024-01-05',
-            lastActivity: '2024-01-21',
-            profilePicture: null,
-            completedModules: 9,
-            totalModules: 10
-          },
-          {
-            id: 4,
-            name: 'Sarah Wilson',
-            email: 'sarah.wilson@email.com',
-            phone: '+1234567893',
-            course: 'Database Design',
-            progress: 100,
-            status: 'Completed',
-            enrolledDate: '2023-12-01',
-            lastActivity: '2024-01-15',
-            profilePicture: null,
-            completedModules: 6,
-            totalModules: 6
-          },
-          {
-            id: 5,
-            name: 'David Brown',
-            email: 'david.brown@email.com',
-            phone: '+1234567894',
-            course: 'Node.js Backend',
-            progress: 45,
-            status: 'Active',
-            enrolledDate: '2024-01-18',
-            lastActivity: '2024-01-20',
-            profilePicture: null,
-            completedModules: 3,
-            totalModules: 8
-          }
-        ];
+        if (!trainerId) {
+          console.error('Trainer ID not found in session storage.');
+          setLoading(false);
+          return;
+        }
 
-        setTrainees(mockTrainees);
-        setFilteredTrainees(mockTrainees);
+        // Fetch actual trainees from enrollment API
+        const enrollmentsRes = await api.get(`/enrollments/trainer/${trainerId}`, {
+          headers: { Authorization: token ? `${token}` : undefined }
+        });
+        
+        if (enrollmentsRes.data && Array.isArray(enrollmentsRes.data)) {
+          // Process enrollments to create trainees data
+          const traineesData = enrollmentsRes.data.map(enrollment => ({
+            id: enrollment.jobSeekerId,
+            name: enrollment.jobSeekerName || 'Unknown Student',
+            email: 'N/A', // Email not available in enrollment data
+            phone: 'N/A', // Phone not available in enrollment data
+            course: enrollment.courseTitle || 'Unknown Course',
+            progress: enrollment.progress || 0,
+            status: enrollment.status === 'ENROLLED' ? 'Active' : 
+                   enrollment.status === 'COMPLETED' ? 'Completed' : 
+                   enrollment.status,
+            enrolledDate: enrollment.enrollmentDate ? 
+              new Date(enrollment.enrollmentDate).toISOString().split('T')[0] : 'N/A',
+            lastActivity: 'N/A', // Not available in current data
+            profilePicture: null,
+            completedModules: Math.floor((enrollment.progress || 0) / 10), // Estimated
+            totalModules: 10 // Default assumption
+          }));
+          
+          setTrainees(traineesData);
+          setFilteredTrainees(traineesData);
+        } else {
+          setTrainees([]);
+          setFilteredTrainees([]);
+        }
       } catch (err) {
         console.error('Error fetching trainees:', err);
+        setTrainees([]);
+        setFilteredTrainees([]);
       } finally {
         setLoading(false);
       }
@@ -223,7 +185,7 @@ const Trainees = () => {
                   Avg. Progress
                 </Typography>
                 <Typography variant="h3" sx={{ fontWeight: 700, color: '#1e3c72' }}>
-                  {Math.round(trainees.reduce((sum, t) => sum + t.progress, 0) / trainees.length)}%
+                  {trainees.length > 0 ? Math.round(trainees.reduce((sum, t) => sum + t.progress, 0) / trainees.length) : 0}%
                 </Typography>
               </CardContent>
             </Card>

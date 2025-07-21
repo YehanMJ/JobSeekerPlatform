@@ -7,6 +7,7 @@ import "@fontsource/quicksand";
 import ProfileButton from '../../components/ProfileButton';
 import Navbar from '../../components/Navbar';
 import LoadingScreen from '../../components/LoadingScreen';
+import { showSuccess, showError, showWarning, showLoading, closeAllNotifications } from '../../utils/notifications';
 
 const Course = () => {
   const navigate = useNavigate();
@@ -14,6 +15,57 @@ const Course = () => {
   const [trainers, setTrainers] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [enrollingCourseId, setEnrollingCourseId] = useState(null);
+
+  const handleEnrollment = async (courseId, courseTitle) => {
+    const jobSeekerId = sessionStorage.getItem('id');
+    const token = localStorage.getItem('token');
+    
+    if (!jobSeekerId) {
+      showError('Authentication Required', 'Please log in to enroll in courses.');
+      return;
+    }
+
+    if (!token) {
+      showError('Authentication Required', 'Please log in to enroll in courses.');
+      return;
+    }
+
+    setEnrollingCourseId(courseId);
+    showLoading('Enrolling in course...');
+
+    try {
+      const response = await api.post(`/enrollments/enroll?courseId=${courseId}&jobSeekerId=${jobSeekerId}`, null, {
+        headers: {
+          Authorization: token
+        }
+      });
+
+      closeAllNotifications();
+      
+      if (response.status === 201) {
+        showSuccess('Enrollment Successful!', `You have successfully enrolled in "${courseTitle}". Start learning today!`);
+      } else if (response.status === 409) {
+        showWarning('Already Enrolled', 'You are already enrolled in this course.');
+      }
+    } catch (error) {
+      closeAllNotifications();
+      
+      if (error.response?.status === 409) {
+        showWarning('Already Enrolled', 'You are already enrolled in this course.');
+      } else if (error.response?.status === 404) {
+        showError('Course Not Found', 'The course you are trying to enroll in could not be found.');
+      } else if (error.response?.status === 401) {
+        showError('Authentication Failed', 'Please log in again to enroll in courses.');
+      } else {
+        showError('Enrollment Failed', 'Failed to enroll in the course. Please try again later.');
+      }
+      
+      console.error('Enrollment error:', error);
+    } finally {
+      setEnrollingCourseId(null);
+    }
+  };
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -204,7 +256,29 @@ const Course = () => {
                     </Typography>
                   </CardContent>
                   <CardActions sx={{ justifyContent: 'center', pb: 1 }}>
-                    <Button size="medium" variant="outlined" className="course-enroll-btn">Enroll Now</Button>
+                    <Button 
+                      size="medium" 
+                      variant="outlined" 
+                      className="course-enroll-btn"
+                      onClick={() => handleEnrollment(course.id, course.title)}
+                      disabled={enrollingCourseId === course.id}
+                      sx={{
+                        position: 'relative',
+                        minHeight: '36px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      {enrollingCourseId === course.id ? (
+                        <>
+                          <CircularProgress size={16} sx={{ mr: 1, color: '#ff4d4f' }} />
+                          Enrolling...
+                        </>
+                      ) : (
+                        'Enroll Now'
+                      )}
+                    </Button>
                   </CardActions>
                 </Card>
               );

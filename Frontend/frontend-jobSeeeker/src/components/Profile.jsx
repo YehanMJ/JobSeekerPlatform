@@ -161,6 +161,28 @@ const Profile = () => {
         }
       } else if (editUser.role === 'trainer') {
         url = `/trainers/${editUser.id}`;
+        // For trainers, try sending only the fields that might be accepted
+        // This is a workaround for potential backend field mapping issues
+        const trainerPayload = {
+          id: editUser.id,
+          username: editUser.username,
+          firstName: editUser.firstName,
+          lastName: editUser.lastName,
+          email: editUser.email,
+          expertise: editUser.expertise,
+          bio: editUser.bio,
+          experience: editUser.experience,
+          certifications: editUser.certifications,
+          achievements: editUser.achievements
+        };
+        // Remove undefined/null values
+        Object.keys(trainerPayload).forEach(key => {
+          if (trainerPayload[key] === undefined || trainerPayload[key] === null) {
+            delete trainerPayload[key];
+          }
+        });
+        payload = trainerPayload;
+        console.log('Trainer-specific payload:', payload);
       } else {
         url = `/${editUser.role}s/${editUser.id}`;
       }
@@ -169,13 +191,30 @@ const Profile = () => {
       console.log('Payload:', payload);
       console.log('Token:', token ? 'Present' : 'Missing');
       console.log('User role:', editUser.role);
+      console.log('Original user data:', user);
       
-      const res = await api.put(url, payload, {
-        headers: { 
-          Authorization: token ? `${token}` : undefined,
-          'Content-Type': 'application/json'
+      let res;
+      try {
+        res = await api.put(url, payload, {
+          headers: { 
+            Authorization: token ? `${token}` : undefined,
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (putError) {
+        // If PUT fails for trainer, try PATCH as a fallback
+        if (editUser.role === 'trainer') {
+          console.log('PUT failed for trainer, trying PATCH:', putError);
+          res = await api.patch(url, payload, {
+            headers: { 
+              Authorization: token ? `${token}` : undefined,
+              'Content-Type': 'application/json'
+            }
+          });
+        } else {
+          throw putError;
         }
-      });
+      }
       
       console.log('API Response:', res.data);
       console.log('Response status:', res.status);
@@ -183,8 +222,20 @@ const Profile = () => {
       // Close loading notification
       closeAllNotifications();
       
-      // The backend should now return the correct updated data
+      // The backend should now return the correct EmployerDTO with 'company' field
+      // We need to map it back to 'companyName' for consistency with UserDetailsDTO
       let updatedUser = { ...res.data };
+      
+      // Special handling for trainer responses that might return null values
+      if (editUser.role === 'trainer') {
+        // If the response has null values, preserve the original values
+        Object.keys(updatedUser).forEach(key => {
+          if (updatedUser[key] === null && user[key] !== null && user[key] !== undefined) {
+            console.log(`Preserving original value for ${key}:`, user[key]);
+            updatedUser[key] = user[key];
+          }
+        });
+      }
       
       // For employers, ensure we have companyName for UI consistency
       if (editUser.role === 'employer' && updatedUser.company) {
@@ -205,8 +256,52 @@ const Profile = () => {
       setEditUser(updatedUser);
       setEditingCard(null);
       
-      // Show success notification
-      showSuccess('Profile Updated!', 'Your profile has been successfully updated.');
+      // Check if the update was actually successful by comparing key fields
+      let wasUpdateSuccessful = true;
+      let updatedFields = [];
+      let failedFields = [];
+      
+      if (editUser.role === 'trainer') {
+        // Check each field individually for trainers
+        const fieldsToCheck = ['firstName', 'lastName', 'username', 'email', 'expertise', 'bio', 'experience', 'certifications', 'achievements'];
+        
+        fieldsToCheck.forEach(field => {
+          const originalValue = user[field];
+          const sentValue = payload[field];
+          const receivedValue = updatedUser[field];
+          
+          if (sentValue !== undefined && sentValue !== originalValue) {
+            // We tried to update this field
+            if (receivedValue === sentValue) {
+              updatedFields.push(field);
+            } else {
+              failedFields.push(field);
+              console.log(`Field ${field} was not updated. Sent: ${sentValue}, Received: ${receivedValue}`);
+            }
+          }
+        });
+        
+        wasUpdateSuccessful = failedFields.length === 0;
+        
+        if (failedFields.length > 0) {
+          console.log('Failed to update fields:', failedFields);
+          console.log('Successfully updated fields:', updatedFields);
+        }
+      } else {
+        // For other roles, use the original simple check
+        wasUpdateSuccessful = true; // Assume success for now
+      }
+      
+      if (wasUpdateSuccessful) {
+        // Show success notification
+        showSuccess('Profile Updated!', 'Your profile has been successfully updated.');
+      } else if (updatedFields.length > 0) {
+        // Some fields updated, some didn't
+        showWarning('Partial Update', `Updated: ${updatedFields.join(', ')}. However, ${failedFields.join(', ')} could not be updated. This may be a backend limitation.`);
+      } else {
+        // Nothing was updated
+        showWarning('Update Failed', 'No fields were updated. This appears to be a backend limitation for trainer profiles.');
+      }
       
     } catch (err) {
       closeAllNotifications();
